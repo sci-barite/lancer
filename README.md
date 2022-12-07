@@ -2,7 +2,8 @@
 
 The code will not work as it is, since it refers to a specific sheet that can't be shared, via functions that are not on the repo.
 
-To make it work, put your own sheet ID in the SpreadsheetApp.openById() functions, replacing the function calls within them.
+To make it work, put your own spreadsheet ID in the SpreadsheetApp.openById() functions, replacing the function calls within them.
+You should also change the getSheetByName() functions to calls for the names you use.
 
 In addition, this doesn't do anything by itself: it's designed to get data from my Sylph Chrome Extension (https://github.com/sci-barite/sylph) which also needs a deployed version of this app to work.
 
