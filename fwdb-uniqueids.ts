@@ -101,7 +101,7 @@ function sift(  sheet : GoogleAppsScript.Spreadsheet.Sheet,
 
 // This is a slimmed-down version of updateIndexes, called when we want to rebuild during off hours.
 function rebuildIndexes(sheet: GoogleAppsScript.Spreadsheet.Sheet, col1: string, col2: string, property : string) {
-    const [lastRow, props] = [sheet.getLastRow(), PropertiesService.getDocumentProperties()];
+    const [lastRow, props] = [sheet.getLastRow(), PropertiesService.getScriptProperties()];
 
     const Results = sift(sheet, col1, col2, lastRow, 1, []);
 
@@ -115,31 +115,32 @@ function tickerUpdate(verbose? : string, warn? : string) {
     const statusSheet = getStatusSheet();
 
     if (warn) {
-        statusSheet.setName("⚠️ Imp is Indexing!").setTabColor("orange");
+        statusSheet.setName("⚠️ Imp is Indexing!").setTabColor("red");
         return;
     }
 
-    const props = PropertiesService.getDocumentProperties();
+    const props = PropertiesService.getScriptProperties();
     const lDoubles = (props.getProperty('NewUniqueJobs.doubles')) ? 
       JSON.parse(props.getProperty('NewUniqueJobs.doubles') as string) : [];
-    const cDoubles = (props.getProperty('NewUniqueCConts.doubles')) ? 
-      JSON.parse(props.getProperty('NewUniqueCConts.doubles') as string) : [];
-    const doubles = ((lDoubles) ? lDoubles.length : 0) + ((cDoubles) ? cDoubles.length : 0);
+    //const cDoubles = (props.getProperty('NewUniqueCConts.doubles')) ? 
+    //  JSON.parse(props.getProperty('NewUniqueCConts.doubles') as string) : [];
+    const doubles = ((lDoubles) ? lDoubles.length : 0) //+ ((cDoubles) ? cDoubles.length : 0);
+    const timeStamp = (props.getProperty('NewUniqueJobs.last') as string).replace(' 2022', '').slice(0,-6);
   
     if (doubles == 0 && verbose) {
         let [badJobs, badConts] = [props.getProperty('NewUniqueJobs.bad'), props.getProperty('NewUniqueCConts.bad')];
-        statusSheet.setName("No doubles! Last auto-check: "+props.getProperty('NewUniqueJobs.last')).setTabColor("green").clear()
+        statusSheet.setName("No doubles! - Last auto-check: "+timeStamp).setTabColor("green").clear()
           .appendRow(['Unique jobs:', JSON.parse(props.getProperty('NewUniqueJobs') as string).length])
-          .appendRow(['Unique contacts:', JSON.parse(props.getProperty('NewUniqueCConts') as string).length])
+          //.appendRow(['Unique contacts:', JSON.parse(props.getProperty('NewUniqueCConts') as string).length])
           .appendRow(['Bad jobs: ', (badJobs?.replaceAll('},', '},\n') || 0)])
-          .appendRow(['Bad jobs: ', (badConts?.replaceAll('},', '},\n') || 0)]);
+          //.appendRow(['Bad contacts: ', (badConts?.replaceAll('},', '},\n') || 0)]);
     }
     else if (doubles == 0) statusSheet.setName("No doubles!").setTabColor("green").clear();
     else {
-      let ticker = verbose ? "DOUBLES: "+doubles+"Last auto-check: "+props.getProperty('NewUniqueJobs.last') : "DOUBLES: "+doubles;
+      let ticker = verbose ? "DOUBLES: "+doubles+" - Last auto-check: "+timeStamp : "DOUBLES: "+doubles;
       statusSheet.setName(ticker).setTabColor("red").clear()
-       .appendRow([props.getProperty('NewUniqueJobs.last')+' — LeadsDB:', JSON.stringify(lDoubles).replaceAll('},', '},\n')])
-       .appendRow([props.getProperty('NewUniqueCConts.last')+' — ContactsDB:', JSON.stringify(cDoubles).replaceAll('},', '},\n')]);
+       .appendRow([timeStamp+' — LeadsDB:', JSON.stringify(lDoubles).replaceAll('},', '},\n')])
+       //.appendRow([props.getProperty('NewUniqueCConts.last')+' — ContactsDB:', JSON.stringify(cDoubles).replaceAll('},', '},\n')]);
     }
 }
 
@@ -149,9 +150,7 @@ function dbFy(update : boolean = false, sheetName? : string) {
     const Sheet = SS.getSheetByName(sheetName as string)!;
     const SheetName = Sheet.getName();
     // With properties starting with the sheet name, we could dynamically retrieve them. But that means iterating through unneeded ones.
-    if (SheetName == 'LeadsDB') {
-        for (let i = 0; i < 3; i++) rebuildIndexes(Sheet, Cols[i].charAt(0), Cols[i].charAt(1), 'NewUnique'+Props[i]);
-    }
+    if (SheetName == 'LeadsDB') rebuildIndexes(Sheet, 'E', 'E', 'NewUnique'+Props[0]);
     else if (SheetName == 'ContactsDB') {
         for (let i = 3; i < 5; i++) rebuildIndexes(Sheet, Cols[i].charAt(0), Cols[i].charAt(1), 'NewUnique'+Props[i]);
     }
