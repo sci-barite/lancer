@@ -1,5 +1,5 @@
-function FWDBCandidates (e : any, db : string | GoogleAppsScript.Spreadsheet.Sheet) {
-    let JSONString = JSON.stringify("Error: "+db+" "+e);  
+function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.Sheet) {
+    let JSONString = JSON.stringify("Error: "+db+" "+Get);  
     let JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was miscasted!");
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
@@ -11,15 +11,15 @@ function FWDBCandidates (e : any, db : string | GoogleAppsScript.Spreadsheet.She
 
     const Today = Utilities.formatDate(new Date(), "GMT+3", "dd/MM/yyyy");
     const Names = db.getRange('A:A').getValues();
-    const Search = (element: any) => element == e.name;
-    if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+e.name; else var name : string = e.name;
+    const Search = (element: any) => element == Get.name;
+    if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+Get.name; else var name : string = Get.name;
 
     db.appendRow([
-    name, '', e.status, 'Sylph', Today, decodeURIComponent(e.pos), decodeURIComponent(e.skills), e.loc, '', e.more, '', '', e.eng, e.rate
+    name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), Get.loc, '', Get.more, '', '', Get.eng, Get.rate
     ]);
     const Name = db.getRange('A'+db.getLastRow());
     const Row = db.getRange(db.getLastRow()+':'+db.getLastRow());
-    const Link = SpreadsheetApp.newRichTextValue().setText(name).setLinkUrl(e.url).build();
+    const Link = SpreadsheetApp.newRichTextValue().setText(name).setLinkUrl(Get.url).build();
     Name?.setRichTextValue(Link);
     Name?.offset(0,1).insertCheckboxes();
     Row?.offset(-1,0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
