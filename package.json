@@ -1,0 +1,24 @@
+{
+  "name": "lancer",
+  "version": "1.3.2",
+  "description": "FW Web App that GETs data from the Sylph Chrome Extension and appends it to our Google Sheets.",
+  "main": "Code.js",
+  "dependencies": {
+    "@types/google-apps-script": "^1.0.55",
+    "typescript": "^4.8.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sci-barite/fwwa-lancer.git"
+  },
+  "author": "sci-barite",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sci-barite/fwwa-lancer/issues"
+  },
+  "homepage": "https://github.com/sci-barite/fwwa-lancer#readme"
+}
