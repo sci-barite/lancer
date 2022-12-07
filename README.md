@@ -12,6 +12,8 @@ You would first need to push it to your own Google Apps Script project (you can 
 
 After doing so, you would need to insert the public URL of the deployment as a "LancerWebApp" constant declared inside a lancer.ts file, within Sylph's src folder.
 
-Then, finally, it would work, although it would still probably fail due to your sheet being different. :)
+Then, finally, it would work like below, although it would still probably fail due to your sheet being structured differently... :)
+
+![Working with Sylph video](https://cdn-images-1.medium.com/max/800/0*zSQ_aYJ2K_1St3sV.gif)
 
 Bottom line: DIY! 😂
