@@ -1,5 +1,5 @@
 function getStatusSheet() : GoogleAppsScript.Spreadsheet.Sheet {
-    const SS = SpreadsheetApp.getActiveSpreadsheet();
+    const SS = SpreadsheetApp.openById(getFWDBLeads());
     const Sheets = SS.getSheets();
     let StatusSheet = null;
     Sheets.forEach(function (sheet) {

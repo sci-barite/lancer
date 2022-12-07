@@ -111,9 +111,15 @@ function rebuildIndexes(sheet: GoogleAppsScript.Spreadsheet.Sheet, col1: string,
     props.setProperty(property+'.last', new Date().toDateString().substring(3)+' @ '+new Date().toLocaleTimeString());
 }
 
-function tickerUpdate(verbose? : string) {
-    const props = PropertiesService.getDocumentProperties();
+function tickerUpdate(verbose? : string, warn? : string) {
     const statusSheet = getStatusSheet();
+
+    if (warn) {
+        statusSheet.setName("⚠️ Imp is Indexing!").setTabColor("orange");
+        return;
+    }
+
+    const props = PropertiesService.getDocumentProperties();
     const lDoubles = (props.getProperty('NewUniqueJobs.doubles')) ? 
       JSON.parse(props.getProperty('NewUniqueJobs.doubles') as string) : [];
     const cDoubles = (props.getProperty('NewUniqueCConts.doubles')) ? 
