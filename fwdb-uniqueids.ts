@@ -129,17 +129,19 @@ function tickerUpdate(verbose? : string, warn? : string) {
   
     if (doubles == 0 && verbose) {
         let [badJobs, badConts] = [props.getProperty('NewUniqueJobs.bad'), props.getProperty('NewUniqueCConts.bad')];
-        statusSheet.setName("No doubles! - Last check: "+timeStamp).setTabColor("green").clear()
+        statusSheet.setName("No doubles! - Lancer check: "+timeStamp).setTabColor("green").clear()
           .appendRow(['Unique jobs:', JSON.parse(props.getProperty('NewUniqueJobs') as string).length])
           //.appendRow(['Unique contacts:', JSON.parse(props.getProperty('NewUniqueCConts') as string).length])
           .appendRow(['Bad jobs: ', (badJobs?.replaceAll('},', '},\n') || 0)])
+          .appendRow(['This check was done by Lancer!', ''])
           //.appendRow(['Bad contacts: ', (badConts?.replaceAll('},', '},\n') || 0)]);
     }
     else if (doubles == 0) statusSheet.setName("No doubles!").setTabColor("green").clear();
     else {
-      let ticker = verbose ? "DOUBLES: "+doubles+" - Last check: "+timeStamp : "DOUBLES: "+doubles;
+      let ticker = verbose ? "DOUBLES: "+doubles+" - Lancer check: "+timeStamp : "DOUBLES: "+doubles;
       statusSheet.setName(ticker).setTabColor("red").clear()
        .appendRow([timeStamp+' — LeadsDB:', JSON.stringify(lDoubles).replaceAll('},', '},\n')])
+       .appendRow(['This check was done by Lancer!', ''])
        //.appendRow([props.getProperty('NewUniqueCConts.last')+' — ContactsDB:', JSON.stringify(cDoubles).replaceAll('},', '},\n')]);
     }
 }
