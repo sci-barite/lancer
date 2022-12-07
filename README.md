@@ -1,11 +1,15 @@
 # Lancer
 
+Lancer is a web app/service that acts as an intermediary between my [Sylph Chrome Extension](https://github.com/sci-barite/sylph) and my Google Sheet at work. 
+
+## Instructions
+
 The code will not work as it is, since it refers to a specific sheet that can't be shared, via functions that are not on the repo.
 
 To make it work, put your own spreadsheet ID in the SpreadsheetApp.openById() functions, replacing the function calls within them.
 You should also change the getSheetByName() functions to calls for the names you use.
 
-In addition, this doesn't do anything by itself: it's designed to get data from my Sylph Chrome Extension (https://github.com/sci-barite/sylph) which also needs a deployed version of this app to work.
+In addition, this doesn't do anything by itself: it's designed to get data from my Sylph Chrome Extension  which also needs a deployed version of this app to work.
 
 To deploy it, you need to use CLASP by Google, which also transpiles the TypeScript into JavaScript/GAS.
 You would first need to push it to your own Google Apps Script project (you can create one at https://script.google.com/), and then deploy it as a web app.
