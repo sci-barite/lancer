@@ -51,11 +51,11 @@ function FWDBLeads(Get : any, db : string) {
             const Company = DB?.getRange('G'+RowN);
             const Comment = DB?.getRange('K'+RowN);
 
-            if (!Row[0][2]) Row[0][2] = Get.person.includes("@") ? Get.person : Get.personlink.split("in/")[1];
+            if (!Row[0][2] || Row[0][2].includes(' ')) Row[0][2] = Get.person.includes("@") ? Get.person : Get.personlink.split("in/")[1];
             if (!Row[0][4]) Row[0][4] = Get.person;
             if (!Row[0][5]) Row[0][5] = Get.loc;
             if (!Row[0][7]) Row[0][7] = Get.compsize;
-            if (!Row[0][8]) Row[0][8] = Get.comp.split("company/")[1];
+            if (!Row[0][8] || Row[0][8].includes(' ')) Row[0][8] = Get.comp.split("company/")[1];
             if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA';
             Row[0][12] = Get.complink;
 
