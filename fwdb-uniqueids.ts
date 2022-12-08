@@ -20,7 +20,7 @@ function createUniqueID(arg : GoogleAppsScript.Spreadsheet.RichTextValue | strin
 
     if (typeof arg == "string") { 
         if (arg.includes("http")) url = arg;
-        else if (!arg.includes(' ') && arg != 'Company' && arg != 'Contact') 
+        else if (!arg.includes(' ') && (arg != 'Company' && arg != 'Contact')) 
             return arg; // This supposes we are feeding it a uniqueID, like in ContactsDB, where we have columns with uniqueIDs.
         else return '';
     }
@@ -79,7 +79,7 @@ function sift(  sheet : GoogleAppsScript.Spreadsheet.Sheet,
         for (let row = 0; row <= (lastRow - lastKnown); row++) {
             const name = (sheetName == 'ContactsDB!') ? names![row][col-1] : values[row][col-1]?.getText();
             const uniqueID = (sheetName == 'ContactsDB!') ? values[row][col-1] : createUniqueID(values[row][col-1]);
-            if (uniqueID == '') continue;   // Saves us time, I wish I thought about it before...
+            if (uniqueID == '' || uniqueID.includes(' ')) continue;   // Saves us time, I wish I thought about it before...
             else if (uniqueID == 'undefined')
                 results['Bad'].push({'Name': name, 'ID': uniqueID, 'Location': sheetName+Cols[colL+(col -1)]+(lastKnown + row)});
             else if (uIDsArray.findIndex(object => {return object['ID'] === uniqueID; }) == -1) {
