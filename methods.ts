@@ -28,8 +28,10 @@ function doPost(e : any) {
   const JSONOutput = ContentService.createTextOutput(JSONString.substring(JSONString.length - 5));
   JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
-  if (JSONString.startsWith("UniqueJobs:")) PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
-  if (JSONString.startsWith('NewUniqueJobs:')) PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
+  if (JSONString.startsWith("UniqueJobs:")) 
+    PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
+  if (JSONString.startsWith('NewUniqueJobs:')) 
+    PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
   
   return JSONOutput;
 }
