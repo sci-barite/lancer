@@ -30,8 +30,10 @@ function doPost(e : any) {
 
   if (JSONString.startsWith("UniqueJobs:")) 
     PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
-  if (JSONString.startsWith('NewUniqueJobs:')) 
+  if (JSONString.startsWith('NewUniqueJobs:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
+    prepareForSylph('NewUniqueJobs');
+  }
   
   return JSONOutput;
 }
