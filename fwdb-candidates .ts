@@ -15,7 +15,8 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+Get.name; else var name : string = Get.name;
 
     db.appendRow([
-    name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), Get.loc, '', Get.more, '', '', Get.eng, Get.rate
+        name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), 
+        Get.loc, '', Get.more, '', '', Get.eng, Get.rate
     ]);
     const RowN = db.getLastRow();
     const Name = db.getRange('A'+RowN);

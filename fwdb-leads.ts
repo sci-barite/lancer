@@ -12,10 +12,11 @@ function FWDBLeads(Get : any, db : string) {
                 Get.comp.split("company/")[1], (new Date()).toDateString(),'', '', Get.complink
                 ]);
 
-            let Row = DB?.getRange(DB.getLastRow()+':'+DB.getLastRow());
-            let Person = DB?.getRange('B'+DB.getLastRow());
-            let Company = DB?.getRange('G'+DB.getLastRow());
-            let Comment = DB?.getRange('K'+DB.getLastRow());
+            RowN = DB!.getLastRow();
+            const Row = DB?.getRange(RowN+':'+RowN);
+            const Person = DB?.getRange('B'+RowN);
+            let Company = DB?.getRange('G'+RowN);
+            let Comment = DB?.getRange('K'+RowN);
             
             let PersonLink = SpreadsheetApp.newRichTextValue()
             .setText(Get.name)
@@ -36,9 +37,9 @@ function FWDBLeads(Get : any, db : string) {
             .build();
             Comment?.setRichTextValue(CommentLink);
 
-            Row?.offset(-((DB?.getLastRow() as number)-3),0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+            Row?.offset(-(RowN -3),0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
             
-            let JSONString = JSON.stringify(Row?.getValues());  
+            let JSONString = 'Row '+RowN+': '+JSON.stringify(Row?.getValues());  
             let JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph has added a new contact!");
             JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
@@ -51,15 +52,18 @@ function FWDBLeads(Get : any, db : string) {
             const Company = DB?.getRange('G'+RowN);
             const Comment = DB?.getRange('K'+RowN);
 
-            if (!Row[0][2] || Row[0][2].includes(' ')) Row[0][2] = Get.person.includes("@") ? Get.person : Get.personlink.split("in/")[1];
-            if (!Row[0][4]) Row[0][4] = Get.person;
+            if (!Row[0][2] || Row[0][2].includes(' ')) Row[0][2] = Get.personlink.split("in/")[1];
+            if (!Row[0][4]) Row[0][4] = Get.person.includes("@") ? 'IMPORT AGAIN' : Get.person;
             if (!Row[0][5]) Row[0][5] = Get.loc;
             if (!Row[0][7]) Row[0][7] = Get.compsize;
             if (!Row[0][8] || Row[0][8].includes(' ')) Row[0][8] = Get.comp.split("company/")[1];
-            if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA';
-            Row[0][12] = Get.complink;
+            Row[0][10] += '\n\nEnriched via Sylph Chrome Extension!\n\n'+Get.date+' engineering jobs posted.\n\n'
+                            +Get.more.replaceAll('---', '\n').replaceAll('htt', '➡️ htt');
+            if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA'; // Telephone
+            if (!Row[0][12]) Row[0][12] = Get.complink;
+            if (!Row[0][13]) Row[0][13] =  Get.person.includes("@") ? Get.person : '';
 
-            DB?.getRange('A'+RowN+':M'+RowN).setValues(Row as any [][]);
+            DB?.getRange('A'+RowN+':N'+RowN).setValues(Row as any [][]);
 
             const PersonLink = SpreadsheetApp.newRichTextValue()
             .setText(Row![0][1])
@@ -75,13 +79,12 @@ function FWDBLeads(Get : any, db : string) {
             Company?.setRichTextValue(CompanyLink);
 
             const CommentLink = SpreadsheetApp.newRichTextValue()
-            .setText('Enriched via Sylph Chrome Extension!\n\n'+Get.date+' engineering jobs posted.\n\n'
-            +Get.more.replaceAll('---', '\n').replaceAll('htt', '➡️ htt'))
+            .setText(Row[0][10])
             .setLinkUrl('https://app.apollo.io/#'+Get.url.split("apollo")[1])
             .build();
             Comment?.setRichTextValue(CommentLink);
 
-            const JSONString = JSON.stringify(Row);  
+            const JSONString = 'Row '+RowN+': '+JSON.stringify(Row);  
             const JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
             JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
