@@ -19,6 +19,7 @@ function imp() {
     })
 }
 
+// Since Sylph must only check for doubles and it can infer row from the index, no need to send also Name, Company, and Location for jobs.
 function prepareForSylph(prop: string) {
     const Structured : {[key: string]: any}[] = JSON.parse(PropertiesService.getScriptProperties().getProperty(prop) as string);
     const IDsOnly = Structured.map(entry => entry['ID']);

@@ -17,8 +17,9 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     db.appendRow([
     name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), Get.loc, '', Get.more, '', '', Get.eng, Get.rate
     ]);
-    const Name = db.getRange('A'+db.getLastRow());
-    const Row = db.getRange(db.getLastRow()+':'+db.getLastRow());
+    const RowN = db.getLastRow();
+    const Name = db.getRange('A'+RowN);
+    const Row = db.getRange(RowN+':'+RowN);
     const Link = SpreadsheetApp.newRichTextValue().setText(name).setLinkUrl(Get.url).build();
     Name?.setRichTextValue(Link);
     Name?.offset(0,1).insertCheckboxes();
@@ -26,7 +27,7 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     Name?.offset(0,3).setFontWeight("bold");
     Row?.setVerticalAlignment('middle');
 
-    JSONString = JSON.stringify(Row?.getValues());  
+    JSONString = JSON.stringify('Row '+RowN+': '+Row?.getValues());  
     JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
 
     return JSONOutput;
