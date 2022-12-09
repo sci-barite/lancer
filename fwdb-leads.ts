@@ -129,15 +129,16 @@ function FWDBLeads(Get : any, db : string) {
     }
 
     DB!.appendRow([
-    '', '', Get.compsize, '0.New', '', '??', Get.date, '1', '', Get.loc, 
-    '','', '', '', '', '', '', '', 'Added via Sylph Chrome Extension!', Get.app
+    '', Get.comp, Get.compsize, '0.New', decodeURIComponent(Get.name), '??', Get.date, '1', '', Get.loc, 
+    Get.person,'', '', '', '', '', '', '', 'Added via Sylph Chrome Extension!', Get.app
     ]);
-    const Company = DB?.getRange('B'+DB.getLastRow());
-    const Job = DB?.getRange('E'+DB.getLastRow());
-    const Person = DB?.getRange('K'+DB.getLastRow());
+    const RowN = DB?.getLastRow();
+    const Company = DB?.getRange('B'+RowN);
+    const Job = DB?.getRange('E'+RowN);
+    const Person = DB?.getRange('K'+RowN);
     const ScoreFormula = DB?.getRange('I2');
-    const Score = DB?.getRange('I'+DB.getLastRow());
-    const Row = DB?.getRange(DB.getLastRow()+':'+DB.getLastRow());
+    const Score = DB?.getRange('I'+RowN);
+    const Row = DB?.getRange(RowN+':'+RowN);
 
     const CompanyLink = SpreadsheetApp.newRichTextValue()
     .setText(Get.comp)
@@ -160,14 +161,14 @@ function FWDBLeads(Get : any, db : string) {
         Person?.setRichTextValue(PersonLink);
     }
 
-    Row?.offset(-((DB?.getLastRow() as number)-3),0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+    Row?.offset(-(RowN! -3),0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
     ScoreFormula?.copyTo((Score as GoogleAppsScript.Spreadsheet.Range), SpreadsheetApp.CopyPasteType.PASTE_FORMULA, false);
 
-    const JSONString = JSON.stringify(Row?.getValues());  
+    const JSONString = 'Row '+RowN+': '+JSON.stringify(Row?.getValues());  
     const JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
-    addUniqueIDs(Get.complink, Get.url, Get.personlink);
+    addUniqueIDs(Get.complink, Get.url, Get.personlink);    // Needs an update! Uses the old sheet-based system 💩
 
     return JSONOutput;
 }
