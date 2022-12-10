@@ -1,5 +1,5 @@
 function addUniqueIDs(Comp : string, Job : string, Cont : string) {
-    var UniqueIDsDB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName("UniqueIDsDB");
+    /**var UniqueIDsDB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName("UniqueIDsDB");
     
     let uniqueCompID = (Comp.split('company/')[1].replace("/life/", "") as string);
     let uniqueJobID = (Job.split('view/')[1].replace('/', '') as string);
@@ -7,10 +7,10 @@ function addUniqueIDs(Comp : string, Job : string, Cont : string) {
     if (Cont) uniqueContID = (Cont.split('in/')[1] as string);
 
     UniqueIDsDB?.appendRow([uniqueCompID, uniqueJobID, uniqueContID]);
-
-    let UniqueJobs = PropertiesService.getScriptProperties().getProperty("UniqueJobs")
-    UniqueJobs = UniqueJobs+","+uniqueJobID;
-    PropertiesService.getScriptProperties().setProperty("UniqueJobs", UniqueJobs);
+    */
+    const UniqueJobs = JSON.parse(PropertiesService.getScriptProperties().getProperty("UniqueJobs")!);
+    UniqueJobs.push(createUniqueID(Job));
+    PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSON.stringify(UniqueJobs));
 }
 
 // I wonder if it can be simplified a bit... Or broken down into two separate functions, for different cases.
