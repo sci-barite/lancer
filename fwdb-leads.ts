@@ -1,3 +1,7 @@
+function buildJobsString(number: string, jobs: string) {
+    return ' via Sylph Chrome Extension!\n\n'+number+' engineering jobs posted.\n\n'+jobs.replaceAll(',', '\n').replaceAll('htt', '➡️ htt');
+}
+
 function FWDBLeads(Get : any, db : string) {
     if (db == "Contacts") {
         const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName("ContactsDB");
@@ -32,7 +36,7 @@ function FWDBLeads(Get : any, db : string) {
             Company?.setRichTextValue(CompanyLink);
 
             let CommentLink = SpreadsheetApp.newRichTextValue()
-            .setText('Added via Sylph Chrome Extension!\n\n'+Get.date+' engineering jobs posted.\n\n'+Get.more.replace('---', '\n'))
+            .setText('Added'+buildJobsString(Get.date, Get.more))
             .setLinkUrl('https://app.apollo.io/?utm_source=cio#'+Get.url.split("apollo")[1])
             .build();
             Comment?.setRichTextValue(CommentLink);
@@ -57,8 +61,7 @@ function FWDBLeads(Get : any, db : string) {
             if (!Row[0][5]) Row[0][5] = Get.loc;
             if (!Row[0][7]) Row[0][7] = Get.compsize;
             if (!Row[0][8] || Row[0][8].includes(' ')) Row[0][8] = Get.comp.split("company/")[1];
-            Row[0][10] += '\n\nEnriched via Sylph Chrome Extension!\n\n'+Get.date+' engineering jobs posted.\n\n'
-                            +Get.more.replaceAll('---', '\n').replaceAll('htt', '➡️ htt');
+            Row[0][10] += '\n\nEnriched'+buildJobsString(Get.date, Get.more);
             if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA'; // Telephone
             if (!Row[0][12]) Row[0][12] = Get.complink;
             if (!Row[0][13]) Row[0][13] =  Get.person.includes("@") ? Get.person : '';
