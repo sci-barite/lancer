@@ -19,6 +19,32 @@ function imp() {
     })
 }
 
+function impFamiliar() {
+    const statusSheet = getStatusSheet();
+    const props = PropertiesService.getScriptProperties();
+    props.setProperty('PreviousTicker', statusSheet.getName())
+    ScriptApp.newTrigger('restoreTicker')
+        .timeBased()
+        .after(60 * 1000)
+        .create();
+    let time = 60;
+    statusSheet.setName('⏰ This message will self-destruct in '+time)
+    const timeBomb = () => {
+        Utilities.sleep(1000);
+        if (!statusSheet.getName().startsWith('⏰')) return;
+        time--;
+        statusSheet.setName('⏰ This message will self-destruct in '+time)
+        timeBomb();
+    }
+    timeBomb();
+}
+
+function restoreTicker() {
+    const statusSheet = getStatusSheet();
+    const props = PropertiesService.getScriptProperties();
+    statusSheet.setName(props.getProperty('PreviousTicker')!);
+}
+
 // Since Sylph must only check for doubles and it can infer row from the index, no need to send also Name, Company, and Location for jobs.
 function prepareForSylph(prop: string) {
     const Structured : {[key: string]: any}[] = JSON.parse(PropertiesService.getScriptProperties().getProperty(prop) as string);

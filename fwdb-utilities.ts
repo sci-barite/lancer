@@ -1,6 +1,6 @@
 function getStatusSheet() : GoogleAppsScript.Spreadsheet.Sheet {
     const SS = SpreadsheetApp.openById(getFWDBLeads());
-    const Initials = ['⚠️', 'DOUBLE', 'No double'];
+    const Initials = ['⚠️', '⏰', 'DOUBLE', 'No double'];
     const Sheets = SS.getSheets();
     let StatusSheet = null;
     Sheets.forEach(function (sheet) {
