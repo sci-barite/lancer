@@ -7,6 +7,7 @@ function imp() {
     dbFy(false, 'LeadsDB');
     dbFy(false, 'ContactsDB');
     
+    // Doing 8 posts for each indexing session seems a bit much: might be better to do one per DB.
     Props.forEach(prop => {
         SubProps.forEach(sub => {
             UrlFetchApp.fetch(getFWDBPost(), 
