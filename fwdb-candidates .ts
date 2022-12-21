@@ -10,18 +10,26 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     }
 
     const Today = Utilities.formatDate(new Date(), "GMT+3", "dd/MM/yyyy");
-    const Names = db.getRange('A:A').getValues();
-    const Search = (element: any) => element == Get.name;
-    if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+Get.name; else var name : string = Get.name;
+    //const Names = db.getRange('A:A').getValues();
+    //const Search = (element: any) => element == Get.name;
+    //if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+Get.name; else var name : string = Get.name;
 
-    db.appendRow([
-        name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), 
-        Get.loc, '', Get.more, '', '', Get.eng, Get.rate
-    ]);
-    const RowN = db.getLastRow();
+    const RowData = [
+        Get.name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), 
+        Get.loc, '', Get.more, '', '', Get.eng, Get.rate, '', '', ''
+    ];
+    if (!Get.ex) db.appendRow(RowData);
+    
+    const RowN = (Get.ex) ? parseInt(Get.ex)+2 : db.getLastRow();
     const Name = db.getRange('A'+RowN);
     const Row = db.getRange(RowN+':'+RowN);
-    const Link = SpreadsheetApp.newRichTextValue().setText(name).setLinkUrl(Get.url).build();
+    if (Get.ex) {
+        const prevVals = Row.getValues().flat();
+        [prevVals[2], prevVals[3], prevVals[4], prevVals[5], prevVals[6], prevVals[9]] = 
+        [RowData[2], RowData[3], RowData[4], prevVals[5]+' / '+RowData[5], prevVals[6]+', '+RowData[6], prevVals[9]+'\nUpdated via Sylph!'];
+        Row.setValues([prevVals]);
+    }
+    const Link = SpreadsheetApp.newRichTextValue().setText(Get.name).setLinkUrl(Get.url).build();
     Name?.setRichTextValue(Link);
     Name?.offset(0,1).insertCheckboxes();
     Row?.offset(-1,0).copyTo(Row, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
