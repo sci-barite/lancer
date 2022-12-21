@@ -19,6 +19,8 @@ function doGet(e: { parameter: any; }) {
     else if (Get.url.includes("apollo")) Resp = FWDBLeads(Get, 'Contacts')
     else if (Get.url == "GetUniqueJobs") 
       Resp = ContentService.createTextOutput(PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string);
+    else if (Get.url == "GetUniqueCands") 
+      Resp = ContentService.createTextOutput(PropertiesService.getScriptProperties().getProperty("UniqueCands") as string);
     
     return Resp;
 }
@@ -33,6 +35,10 @@ function doPost(e : any) {
   if (JSONString.startsWith('NewUniqueJobs:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
     prepareForSylph('NewUniqueJobs');
+  }
+  if (JSONString.startsWith('NewUniqueCands:')) {
+    PropertiesService.getScriptProperties().setProperty("NewUniqueCands", JSONString.replace('NewUniqueCands:', ''));
+    prepareForSylph('NewUniqueCands');
   }
   
   return JSONOutput;
