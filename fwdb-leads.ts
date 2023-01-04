@@ -106,6 +106,12 @@ function FWDBLeads(Get : any, db : string) {
             Update += ' - Job status changed from '+Row[1]+' to X.Closed.\n';
             DB?.getRange('D'+RowN).setValue('X.Closed');
         }
+        else {
+            if (DB?.getRange('D'+RowN).getValue().includes('not reach')) {
+                Update += ' - Job status changed from '+Row[1]+' to 0.Open.\n';
+                DB?.getRange('D'+RowN).setValue('0.Open');
+            }
+        }
         if (Row[0] != Get.compsize) {
             if (!Row[0]) Row[0] = 'NA';
             Update += ' - Company size updated from '+Row[0]+' to '+Get.compsize+'.\n';
