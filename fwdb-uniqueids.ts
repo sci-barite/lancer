@@ -108,7 +108,7 @@ function rebuildIndexes(sheet: GoogleAppsScript.Spreadsheet.Sheet, col1: string,
     props.setProperty(property, JSON.stringify(Results['Unique']));
     props.setProperty(property+'.doubles', JSON.stringify(Results['Double']));
     props.setProperty(property+'.bad', JSON.stringify(Results['Bad']));
-    props.setProperty(property+'.last', '@ '+new Date().toLocaleTimeString());
+    props.setProperty(property+'.last', new Date().toLocaleTimeString());
 }
 
 function tickerUpdate(verbose? : string, warn? : string) {
