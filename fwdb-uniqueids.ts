@@ -108,7 +108,7 @@ function rebuildIndexes(sheet: GoogleAppsScript.Spreadsheet.Sheet, col1: string,
     props.setProperty(property, JSON.stringify(Results['Unique']));
     props.setProperty(property+'.doubles', JSON.stringify(Results['Double']));
     props.setProperty(property+'.bad', JSON.stringify(Results['Bad']));
-    props.setProperty(property+'.last', new Date().toDateString().substring(3)+' @ '+new Date().toLocaleTimeString());
+    props.setProperty(property+'.last', '@ '+new Date().toLocaleTimeString());
 }
 
 function tickerUpdate(verbose? : string, warn? : string) {
@@ -122,11 +122,11 @@ function tickerUpdate(verbose? : string, warn? : string) {
     const lDoubles = props.getProperty(JobsDoubles) ? JSON.parse(props.getProperty(JobsDoubles) as string) : [];
     const cDoubles = props.getProperty(ContsDoubles) ? JSON.parse(props.getProperty(ContsDoubles) as string) : [];
     const doubles = (props.getProperty(JobsDoubles) ? lDoubles.length : 0) + (props.getProperty(ContsDoubles) ? cDoubles.length : 0);
-    const timeStamp = (props.getProperty(Jobs+'.last') as string).replace(' 2022', '').slice(0,-6);
+    const timeStamp = (props.getProperty(Jobs+'.last') as string).slice(0,-6);
   
     if (doubles == 0 && verbose) {
         const [badJobs, badConts] = [props.getProperty(Jobs+'.bad'), props.getProperty(Conts+'.bad')];
-        statusSheet.setName("No doubles! - Lancer check: "+timeStamp).setTabColor("green").clear()
+        statusSheet.setName("No doubles! - Last check: "+timeStamp).setTabColor("green").clear()
           .appendRow(['Unique jobs:', JSON.parse(props.getProperty(Jobs) as string).length])
           .appendRow(['Unique contacts:', JSON.parse(props.getProperty(Conts) as string).length])
           .appendRow(['Bad jobs: ', (badJobs?.replaceAll('},', '},\n') || 0)])
@@ -135,7 +135,7 @@ function tickerUpdate(verbose? : string, warn? : string) {
     }
     else if (doubles == 0) statusSheet.setName("No doubles!").setTabColor("green").clear();
     else {
-      const ticker = verbose ? "DOUBLES: "+doubles+" - Lancer check: "+timeStamp : "DOUBLES: "+doubles;
+      const ticker = verbose ? "DOUBLES: "+doubles+" - Last check: "+timeStamp : "DOUBLES: "+doubles;
       statusSheet.setName(ticker).setTabColor("red").clear()
        .appendRow([timeStamp+' — LeadsDB:', JSON.stringify(lDoubles).replaceAll('},', '},\n')])
        .appendRow([timeStamp+' — ContactsDB:', JSON.stringify(cDoubles).replaceAll('},', '},\n')])
