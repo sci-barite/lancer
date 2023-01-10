@@ -1,5 +1,5 @@
-function FWDBLeads(Get : any, db : string) : GoogleAppsScript.Content.TextOutput {
-    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+function FWDBLeads(Get : any) : GoogleAppsScript.Content.TextOutput {
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('LeadsDB');
     const RowN : number = Get.ex? parseInt(Get.ex) + 2 : 0;
     return RowN ? LeadsUpdate(Get, DB!, RowN) : LeadsAppend(Get, DB!);
 }
