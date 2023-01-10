@@ -56,7 +56,7 @@ function FWDBLeads(Get : any, db : string) {
             const Company = DB?.getRange('G'+RowN);
             const Comment = DB?.getRange('K'+RowN);
 
-            if (!Row[0][2] || Row[0][2].includes(' ')) Row[0][2] = Get.personlink.split("in/")[1];
+            if (!Row[0][2] || Row[0][2].includes(' ') || Get.person.includes("@")) Row[0][2] = Get.personlink.split("in/")[1];
             if (!Row[0][4]) Row[0][4] = Get.person.includes("@") ? 'IMPORT AGAIN' : Get.person;
             if (!Row[0][5]) Row[0][5] = Get.loc;
             if (!Row[0][7]) Row[0][7] = Get.compsize;
