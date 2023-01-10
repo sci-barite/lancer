@@ -11,12 +11,11 @@ function doGet(e: { parameter: any; }) {
     let Resp = JSONOutput;
 
     if (Get.url.includes("linkedin")) {
-      if (Get.url.includes("jobs"))
-        Resp = FWDBLeads(Get, 'Leads');
+      if (Get.url.includes("jobs")) Resp = FWDBLeads(Get);
       else Resp = FWDBCandidates(Get, 'DB');
     }
     else if (Get.url.includes("upwork") || Get.url.includes("djinni")) Resp = FWDBCandidates(Get, 'Free');
-    else if (Get.url.includes("apollo")) Resp = FWDBLeads(Get, 'Contacts')
+    else if (Get.url.includes("apollo")) Resp = FWDBContacts(Get)
     else if (Get.url == "GetUniqueJobs") 
       Resp = ContentService.createTextOutput(
         (PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string)

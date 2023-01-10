@@ -1,11 +1,15 @@
-function FWDBLeads(Get : any, db : string) {
-    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName(db === 'Leads' ? 'LeadsDB' : 'ContactsDB');
-    const Names = (db === 'Leads') ? null : DB?.getRange('B:B').getValues();
-    const Search = (element: any) => element == decodeURIComponent(Get.name);
-    const RowN : number = (db === 'Leads') ? (Get.ex? parseInt(Get.ex) + 2 : -1) : Names!.findIndex(Search);
+function FWDBLeads(Get : any, db : string) : GoogleAppsScript.Content.TextOutput {
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+    const RowN : number = Get.ex? parseInt(Get.ex) + 2 : 0;
+    return RowN ? LeadsUpdate(Get, DB!, RowN) : LeadsAppend(Get, DB!);
+}
 
-    return (RowN < 0) ? (db === 'Leads' ? LeadsAppend(Get, DB!) : ContactsAppend(Get, DB!))
-        : (db === 'Leads' ? LeadsUpdate(Get, DB!, RowN) : ContactsUpdate(Get, DB!, RowN));
+function FWDBContacts(Get: any) : GoogleAppsScript.Content.TextOutput {
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+    const Names = DB?.getRange('B:B').getValues();
+    const Search = (element: any) => element == decodeURIComponent(Get.name);
+    const RowN : number = Names!.findIndex(Search) + 1;
+    return RowN ? ContactsUpdate(Get, DB!, RowN) : ContactsAppend(Get, DB!);
 }
 
 function LeadsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleAppsScript.Content.TextOutput {
