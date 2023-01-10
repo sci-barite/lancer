@@ -17,9 +17,7 @@ function doGet(e: { parameter: any; }) {
     else if (Get.url.includes("upwork") || Get.url.includes("djinni")) Resp = FWDBCandidates(Get, 'Free');
     else if (Get.url.includes("apollo")) Resp = FWDBContacts(Get)
     else if (Get.url == "GetUniqueJobs") 
-      Resp = ContentService.createTextOutput(
-        (PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string)
-      );
+      Resp = ContentService.createTextOutput((PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string));
     else if (Get.url == "GetUniqueCands") 
       Resp = ContentService.createTextOutput(PropertiesService.getScriptProperties().getProperty("UniqueCands") as string);
     
