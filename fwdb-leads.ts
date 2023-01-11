@@ -46,15 +46,16 @@ function LeadsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleA
 
 function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: number) : GoogleAppsScript.Content.TextOutput {
     const Row = DB?.getRange('C'+RowN+':T'+RowN).getValues().flat()!;
+    const StatusField = DB?.getRange('D'+RowN), Status = StatusField.getValue();
     let Update = 'Row '+(parseInt(Get.ex)+2)+':\n';
 
     if (Get.date == 'Closed') {
         Update += ' - Job status changed from '+Row[1]+' to X.Closed.\n';
-        DB?.getRange('D'+RowN).setValue('X.Closed');
+        StatusField.setValue('X.Closed');
     }
-    else if (DB?.getRange('D'+RowN).getValue().includes('not reach')) {
+    else if (Status.includes('not reach') || Status == '0.New') {
         Update += ' - Job status changed from '+Row[1]+' to 0.Open.\n';
-        DB?.getRange('D'+RowN).setValue('0.Open');
+        StatusField.setValue('0.Open');
     }
     if (Row[0] != Get.compsize) {
         if (!Row[0]) Row[0] = 'NA';
