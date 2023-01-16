@@ -15,18 +15,15 @@ function addUniqueIDs(Comp : string, Job : string, Cont : string) {
 
 // I wonder if it can be simplified a bit... Or broken down into two separate functions, for different cases.
 function createUniqueID(arg : GoogleAppsScript.Spreadsheet.RichTextValue | string) : string {
-    let url : string | null = '';
-    let [uniqueID, text] = ['', ''];    // The caller will know not to record an empty uniqueID, will skip.
+    let url = '', text = '', uniqueID = '';
 
     if (typeof arg == "string") { 
-        if (arg.includes("http")) url = arg;
-        else if (!arg.includes(' ') && (arg != 'Company' && arg != 'Contact')) 
-            return arg; // This supposes we are feeding it a uniqueID, like in ContactsDB, where we have columns with uniqueIDs.
-        else return '';
+        if (!arg.includes(' ') && arg != 'Company' && arg != 'Contact') return arg;
+        else if (arg.startsWith("http")) url = arg.trim();
     }
-    else [url, text] = [arg!.getLinkUrl(), arg!.getText()]; // Can only be RichTextValue then.
+    else [url, text] = [arg!.getLinkUrl()!, arg!.getText()!]; // Can only be RichTextValue then.
 
-    if (url == null || url == '') return '';    // Probably a bad link, or no link for some reason.
+    if (!url) return '';    // Probably a bad link, or no link for some reason. Empty string will be skipped.
     if (text.includes('@') && text.includes('.')) return text.trim(); // Email address, with reasonable certainty.
 
     if (url.includes("linkedin.com/in")) {
@@ -34,14 +31,14 @@ function createUniqueID(arg : GoogleAppsScript.Spreadsheet.RichTextValue | strin
         if (uniqueID.includes('?')) uniqueID = uniqueID.split('?')[0];
     }
     else if (url.includes("linkedin.com/jobs") || url.includes("linkedin.com/comm/jobs"))
-        uniqueID = (url.split('view/')[1].replace('/', '') as string);
+        uniqueID = url.split('view/')[1].replace('/', '');
     else if (url.includes("linkedin.com/company")) {
         uniqueID = url.includes('?') ? url.split('company/')[1].split('?')[0] : url.split('company/')[1];
         if (uniqueID.includes('/')) uniqueID = uniqueID.replace('/life','').replace('/','');
     }
     else if (url.includes("apollo")) uniqueID = url.split('/people/')[1];
 
-    return uniqueID;
+    return uniqueID.toString();
 }
 
 // Not used yet, but I guess it's useful.
@@ -78,7 +75,7 @@ function sift(  sheet : GoogleAppsScript.Spreadsheet.Sheet,
     for(let col = (colR - colL + 1); col > 0; col--) {  // We want the right columns first, hence the reverse loop.
         for (let row = 0; row <= (lastRow - lastKnown); row++) {
             const name = (sheetName == 'ContactsDB!') ? names![row][col-1] : values[row][col-1]?.getText();
-            const uniqueID = (sheetName == 'ContactsDB!') ? values[row][col-1] : createUniqueID(values[row][col-1]);
+            const uniqueID : string = (sheetName == 'ContactsDB!') ? values[row][col-1].toString() : createUniqueID(values[row][col-1]);
             if (uniqueID == '' || uniqueID.includes(' ')) continue;   // Saves us time, I wish I thought about it before...
             else if (uniqueID == 'undefined')
                 results['Bad'].push({'Name': name, 'ID': uniqueID, 'Location': sheetName+Cols[colL+(col -1)]+(lastKnown + row)});
