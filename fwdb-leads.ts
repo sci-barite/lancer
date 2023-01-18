@@ -1,6 +1,6 @@
 function FWDBLeads(Get : any) : GoogleAppsScript.Content.TextOutput {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('LeadsDB');
-    const RowN : number = Get.ex? parseInt(Get.ex) + 2 : 0;
+    const RowN : number = Get.ex? parseInt(Get.ex) + 2 : 0; // The index in NewUniqueIDs obviously lacks header, so +1 is not enough.
     return RowN ? LeadsUpdate(Get, DB!, RowN) : LeadsAppend(Get, DB!);
 }
 
@@ -8,11 +8,12 @@ function FWDBContacts(Get: any) : GoogleAppsScript.Content.TextOutput {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
     const Names = DB?.getRange('B:B').getValues();
     const Search = (element: any) => element == decodeURIComponent(Get.name);
-    const RowN : number = Names!.findIndex(Search) + 1;
+    const RowN : number = Names!.findIndex(Search) + 1; // Here we count on the actual column including the header, so +1 is enough.
     return RowN ? ContactsUpdate(Get, DB!, RowN) : ContactsAppend(Get, DB!);
 }
 
 function LeadsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleAppsScript.Content.TextOutput {
+    Get.person = Get.person == "NA" ? '' : Get.person;
     DB!.appendRow([
         '', Get.comp, Get.compsize, '0.New', decodeURIComponent(Get.name), '??', Get.date, '1', '', Get.loc, 
         Get.person,'', '', '', '', '', '', '', 'Added via Sylph Chrome Extension!', Get.app
@@ -27,7 +28,7 @@ function LeadsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleA
     const JobLink = SpreadsheetApp.newRichTextValue().setText(decodeURIComponent(Get.name)).setLinkUrl(Get.url).build();
     Job?.setRichTextValue(JobLink);
 
-    if (Get.person != "NA") {
+    if (Get.person) {
         const PersonLink = SpreadsheetApp.newRichTextValue().setText(Get.person).setLinkUrl(Get.personlink).build();
         Person?.setRichTextValue(PersonLink);
     }
