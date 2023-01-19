@@ -120,7 +120,7 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
     if (!Row[0][5]) Row[0][5] = Get.loc;
     if (!Row[0][7]) Row[0][7] = Get.compsize;
     if (!Row[0][8] || Row[0][8].includes(' ')) Row[0][8] = Get.comp.split("company/")[1];
-    Row[0][10] += '\n\nEnriched'+buildJobsString(Get.date, Get.more);
+    if (!Row[0][10].includes('Enriched')) Row[0][10] += '\n\nEnriched'+buildJobsString(Get.date, Get.more);
     if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA'; // Telephone
     if (!Row[0][12]) Row[0][12] = Get.complink;
     if (!Row[0][13]) Row[0][13] =  Get.person.includes("@") ? Get.person : '';
@@ -141,4 +141,13 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
     const JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
+}
+
+function ContactsListAppend(List: {[key: string]: string[][]}[]) {
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+    const EmptyRow = DB!.getLastRow() + 1, NumRows = List.length;
+    DB!.insertRowsAfter(EmptyRow, NumRows);
+    const Range = DB?.getRange(EmptyRow, 1, NumRows, List[0]['Header']!.length);
+    const Data = List.map(row => row[0].flat());
+    Range?.setValues(Data);
 }

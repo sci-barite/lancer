@@ -29,16 +29,19 @@ function doPost(e : any) {
   const JSONOutput = ContentService.createTextOutput(JSONString.substring(JSONString.length - 5));
   JSONOutput.setMimeType(ContentService.MimeType.JSON);
 
-  if (JSONString.startsWith(  "UniqueJobs:")) 
+  if (JSONString.startsWith("UniqueJobs:")) 
     PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
-  if (JSONString.startsWith('NewUniqueJobs:')) {
+  else if (JSONString.startsWith('NewUniqueJobs:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
     prepareForSylph('NewUniqueJobs');
   }
-  if (JSONString.startsWith('NewUniqueCands:')) {
+  else if (JSONString.startsWith('NewUniqueCands:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueCands", JSONString.replace('NewUniqueCands:', ''));
     prepareForSylph('NewUniqueCands');
   }
-  
+  else if (JSONString.startsWith('ApolloList:')) {
+    const payload : {[key: string]: string[][]}[] = JSON.parse(JSONString.replace('ApolloList:', ''))
+    ContactsListAppend(payload);
+  }
   return JSONOutput;
 }
