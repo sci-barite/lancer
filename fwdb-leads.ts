@@ -145,9 +145,29 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
 
 function ContactsListAppend(List: {[key: string]: string[][]}[]) {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
-    const EmptyRow = DB!.getLastRow() + 1, NumRows = List.length;
-    DB!.insertRowsAfter(EmptyRow, NumRows);
-    const Range = DB?.getRange(EmptyRow, 1, NumRows, List[0]['Header']!.length);
-    const Data = List.map(row => row[0].flat());
+    const Row1 = DB!.getLastRow() + 1, Rows = List.length - 1, Today = new Date().toLocaleDateString();
+    const Status = '0.Imported', Message = 'List imported via Sylph!', URL = 'https://app.apollo.io/';
+    const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
+
+    DB!.insertRowsAfter(Row1, Rows);
+    List.shift();
+
+    const Data = List.map(row => {const Row = Object.values(row)[0];
+        Pers.push([SpreadsheetApp.newRichTextValue().setText(Row[0][0]).setLinkUrl(Row[0][2]).build()]);
+        Comp.push([SpreadsheetApp.newRichTextValue().setText(Row![2][0]).setLinkUrl(Row[2][3]).build()]);
+        Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+Row[0][1]).build()]);
+        return ['', Row[0][0], Row[0][2].split('in/')[1], Status, Row[1][0], Row[4][0], Row[2][0], Row[5][0], 
+                Row[2][3].split('ny/')[1], Today, Message, '', Row[2][2], Row[6][0]]
+    });
+
+    const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
+    const Range = DB?.getRange(Row1, 1, Rows, Data[0].length);
+    DB!.getRange(Row1, 1, Rows, 1).insertCheckboxes().check();
+
     Range?.setValues(Data);
+    Persons?.setRichTextValues(Pers);
+    Company?.setRichTextValues(Comp);
+    Comment?.setRichTextValues(Comm);
+
+    DB!.getRange('2:2').copyTo(Range!, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
 }
