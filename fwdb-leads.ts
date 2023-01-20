@@ -143,22 +143,30 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
     return JSONOutput;
 }
 
-function ContactsListAppend(List: {[key: string]: string[][]}[]) {
-    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB'), Header = List[0].Header.flat();
-    const Row1 = DB!.getLastRow() + 1, Rows = List.length - 1, Today = new Date().toLocaleDateString();
+function ContactsListAppend(List: {[key: string]: string}[]) {
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');    //, Header = List[0].Header.flat();
+    const Row1 = DB!.getLastRow() + 1, Rows = List.length, Today = new Date().toLocaleDateString();
     const Status = '0.Imported', Message = 'List imported via Sylph!', URL = 'https://app.apollo.io/';
     const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
-    const Mod = (Header.indexOf('Quick Actions') == 1 && Header.indexOf('Phone') == 4) ? 1 : 0;
+    //const Mod = (Header.indexOf('Quick Actions') == 1 && Header.indexOf('Phone') == 4) ? 1 : 0;
     DB!.insertRowsAfter(Row1, Rows);
-    List.shift();
-
-    const Data = List.map(row => {const Row = Object.values(row)[0];
+    //List.shift();
+    
+    /**const DataOld = List.map(row => {const Row = Object.values(row)[0];
         Pers.push([SpreadsheetApp.newRichTextValue().setText(Row[0][0]).setLinkUrl(Row[0][2]).build()]);
         Comp.push([SpreadsheetApp.newRichTextValue().setText(Row[2][0]).setLinkUrl(Row[2][3]).build()]);
         Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+Row[0][1]).build()]);
         return ['', Row[0][0], Row[0][2].split('/in/')[1], Status, Row[1+Mod][0], Row[4+Mod][0], Row[2+Mod][0], Row[5+Mod][0], 
                 Row[2+Mod][3].split('any/')[1], Today, Message, '', Row[2+Mod][2], Row[6+Mod][0]]
-    })
+    });*/
+
+    const Data = List.map(Row => {
+        Pers.push([SpreadsheetApp.newRichTextValue().setText(Row.Name).setLinkUrl(Row.Name_linkedin).build()]);
+        Comp.push([SpreadsheetApp.newRichTextValue().setText(Row.Company).setLinkUrl(Row.Company_linkedin).build()]);
+        Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+Row.Name_apollo).build()]);
+        return ['', Row.Name, Row.Name_linkedin.split('/in/')[1], Status, Row.Title, Row.Location, Row.Company, Row.Employees, 
+                Row.Company_linkedin.split('/company/')[1], Today, Message, Row.Phone, Row.Company_web, Row.Email]
+    });
 
     const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
     const Range = DB?.getRange(Row1, 1, Rows, Data[0].length);

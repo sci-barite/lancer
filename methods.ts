@@ -40,7 +40,8 @@ function doPost(e : any) {
     prepareForSylph('NewUniqueCands');
   }
   else if (JSONString.startsWith('ApolloList:')) {
-    const payload : {[key: string]: string[][]}[] = JSON.parse(JSONString.replace('ApolloList:', ''))
+    //const payload : {[key: string]: string[][]}[] = JSON.parse(JSONString.replace('ApolloList:', ''))
+    const payload : {[key: string]: string}[] = JSON.parse(JSONString.replace('ApolloList:', ''))
     ContactsListAppend(payload);
   }
   return JSONOutput;
