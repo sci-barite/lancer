@@ -155,6 +155,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
         Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin).build()]);
         Comp.push([SpreadsheetApp.newRichTextValue().setText(row.Company).setLinkUrl(row.Company_linkedin).build()]);
         Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+row.Name_apollo).build()]);
+        
         return ['', row.Name, row.Name_linkedin.split('/in/')[1], Status, row.Title, row.Location, row.Company, row.Employees, 
                 row.Company_linkedin.split('/company/')[1], Today, Message, row.Phone, row.Company_web, row.Email]
     });
