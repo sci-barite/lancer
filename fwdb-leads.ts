@@ -144,19 +144,19 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
 }
 
 function ContactsListAppend(List: {[key: string]: string}[]) {
-    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');    //, Header = List[0].Header.flat();
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
     const Row1 = DB!.getLastRow() + 1, Rows = List.length, Today = new Date().toLocaleDateString();
     const Status = '0.Imported', Message = 'List imported via Sylph!', URL = 'https://app.apollo.io/';
     const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
 
     DB!.insertRowsAfter(Row1, Rows);
 
-    const Data = List.map(Row => {
-        Pers.push([SpreadsheetApp.newRichTextValue().setText(Row.Name).setLinkUrl(Row.Name_linkedin).build()]);
-        Comp.push([SpreadsheetApp.newRichTextValue().setText(Row.Company).setLinkUrl(Row.Company_linkedin).build()]);
-        Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+Row.Name_apollo).build()]);
-        return ['', Row.Name, Row.Name_linkedin.split('/in/')[1], Status, Row.Title, Row.Location, Row.Company, Row.Employees, 
-                Row.Company_linkedin.split('/company/')[1], Today, Message, Row.Phone, Row.Company_web, Row.Email]
+    const Data = List.map(row => {
+        Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin).build()]);
+        Comp.push([SpreadsheetApp.newRichTextValue().setText(row.Company).setLinkUrl(row.Company_linkedin).build()]);
+        Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+row.Name_apollo).build()]);
+        return ['', row.Name, row.Name_linkedin.split('/in/')[1], Status, row.Title, row.Location, row.Company, row.Employees, 
+                row.Company_linkedin.split('/company/')[1], Today, Message, row.Phone, row.Company_web, row.Email]
     });
 
     const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
