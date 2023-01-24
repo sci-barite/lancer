@@ -5,4 +5,5 @@ creds.json
 .clasp.json
 .DS_Store
 secrets.ts
+list-sample.txt
 .count

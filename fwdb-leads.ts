@@ -84,8 +84,8 @@ function buildJobsString(number: string, jobs: string) {
 }
 
 function ContactsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleAppsScript.Content.TextOutput {
-    DB!.appendRow([
-        '', '', Get.personlink.split("in/")[1], '0.New', Get.person, Get.loc, '', Get.compsize, 
+    DB!.appendRow([                                     // // Using fallback values now, usually Get.person
+        '', '', Get.personlink.split("in/")[1], '0.New', Get.app, Get.loc, '', Get.compsize, 
         Get.comp.split("company/")[1], (new Date()).toDateString(),'', '', Get.complink
     ]);
 
@@ -94,8 +94,8 @@ function ContactsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : Goog
     
     const PersonLink = SpreadsheetApp.newRichTextValue().setText(Get.name).setLinkUrl(Get.personlink).build();
     Person?.setRichTextValue(PersonLink);
-
-    const CompanyLink = SpreadsheetApp.newRichTextValue().setText(Get.app).setLinkUrl(Get.comp).build();
+                                                                // Using fallback values now, usually Get.app
+    const CompanyLink = SpreadsheetApp.newRichTextValue().setText(Get.person).setLinkUrl(Get.comp).build();
     Company?.setRichTextValue(CompanyLink);
 
     const CommentLink = SpreadsheetApp.newRichTextValue().setText('Added'+buildJobsString(Get.date, Get.more))
@@ -152,12 +152,12 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
     DB!.insertRowsAfter(Row1, Rows);
 
     const Data = List.map(row => {
-        Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin).build()]);
-        Comp.push([SpreadsheetApp.newRichTextValue().setText(row.Company).setLinkUrl(row.Company_linkedin).build()]);
+        Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin || URL).build()]);
+        Comp.push([SpreadsheetApp.newRichTextValue().setText(row.Company).setLinkUrl(row.Company_linkedin || URL).build()]);
         Comm.push([SpreadsheetApp.newRichTextValue().setText(Message).setLinkUrl(URL+row.Name_apollo).build()]);
         
-        return ['', row.Name, row.Name_linkedin.split('/in/')[1], Status, row.Title, row.Location, row.Company, row.Employees, 
-                row.Company_linkedin.split('/company/')[1], Today, Message, row.Phone, row.Company_web, row.Email]
+        return ['', row.Name, row.Name_linkedin ? row.Name_linkedin.split('/in/')[1] : 'NA', Status, row.Title, row.Location, row.Company, 
+                row.Employees, row.Company_linkedin.split('/company/')[1], Today, Message, row.Phone, row.Company_web || URL, row.Email]
     });
 
     const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
