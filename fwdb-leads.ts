@@ -80,55 +80,29 @@ function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: num
 }
 
 function buildJobsString(number: string, jobs: string) {
-    return ' via Sylph Chrome Extension!\n\n'+number+' engineering jobs posted.\n\n'+jobs.replaceAll(',', '\n').replaceAll('htt', '➡️ htt');
+    const sanitized = jobs.split(',').map(job => job.includes('?') ? job.split('?')[0] : job).toString().replaceAll(',', '\n');
+    return ' via Sylph Chrome Extension!\n\n'+number+' engineering jobs posted.\n\n'+sanitized.replaceAll('htt', '➡️ htt');
 }
 
 function ContactsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleAppsScript.Content.TextOutput {
-    const JSONString = 'This method has been deprecated!'
-    const JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph made some weird mistake!");  
+    const JSONOutput = ContentService.createTextOutput("This method has been deprecated!\n🧚‍♀️ - 🧜‍♂️ Sylph or Lancer made some weird mistake!");  
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
 }
 
 function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: number) : GoogleAppsScript.Content.TextOutput {
-    const Row = DB?.getRange('A'+RowN+':M'+RowN).getValues()!;
-    const Person = DB?.getRange('B'+RowN), Company = DB?.getRange('G'+RowN), Comment = DB?.getRange('K'+RowN);
-
-    if (!Row[0][2] || Row[0][2].includes(' ') || Get.person.includes("@")) Row[0][2] = Get.personlink.split("in/")[1];
-    if (!Row[0][4]) Row[0][4] = Get.person.includes("@") ? 'IMPORT AGAIN' : Get.person;
-    if (!Row[0][5]) Row[0][5] = Get.loc;
-    if (!Row[0][7]) Row[0][7] = Get.compsize;
-    if (!Row[0][8] || Row[0][8].includes(' ')) Row[0][8] = Get.comp.split("company/")[1];
-    if (!Row[0][10].includes('Enriched')) Row[0][10] += '\n\nEnriched'+buildJobsString(Get.date, Get.more);
-    if (!Row[0][11]) Row[0][11] = parseInt(Get.app.charAt(2)) ? Get.app : 'NA'; // Telephone
-    if (!Row[0][12]) Row[0][12] = Get.complink;
-    if (!Row[0][13]) Row[0][13] =  Get.person.includes("@") ? Get.person : '';
-
-    DB?.getRange('A'+RowN+':N'+RowN).setValues(Row as any [][]);
-
-    const PersonLink = SpreadsheetApp.newRichTextValue().setText(Row![0][1]).setLinkUrl(Get.personlink).build();
-    Person?.setRichTextValue(PersonLink);
-
-    const CompanyLink = SpreadsheetApp.newRichTextValue().setText(Row![0][6]).setLinkUrl(Get.comp).build();
-    Company?.setRichTextValue(CompanyLink);
-
-    const CommentLink = SpreadsheetApp.newRichTextValue().setText(Row[0][10])
-    .setLinkUrl('https://app.apollo.io/#'+Get.url.split("apollo")[1]).build();
-    Comment?.setRichTextValue(CommentLink);
-
-    const JSONString = 'Row '+RowN+': '+JSON.stringify(Row);  
-    const JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
+    const JSONOutput = ContentService.createTextOutput("This method has been deprecated!\n🧚‍♀️ - 🧜‍♂️ Sylph or Lancer made some weird mistake!"); 
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
 }
 
 function ContactsListAppend(List: {[key: string]: string}[]) {
-    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
-    const Row1 = DB!.getLastRow() + 1, Rows = List.length, Today = new Date().toLocaleDateString();
+    const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB'), Names = DB?.getRange('B:B').getValues();
+    const Row0 = DB!.getLastRow(), Row1 = Row0 + 1, Today = new Date().toLocaleDateString(), Updated : number[] = [];
     const Status = '0.Imported', Message = 'Contact/list imported via Sylph!', URL = 'https://app.apollo.io/';
     const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
 
-    const Data = List.map(row => {
+    const Data = List.filter(row => Names!.findIndex((element: any) => element == row.Name) < 0).map(row => {
         const ApolloLink = row.Name_apollo.startsWith('#') ? URL+row.Name_apollo : row.Name_apollo;
         const Comment = Message + (row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : '');
         Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin || URL).build()]);
@@ -138,20 +112,37 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
                 row.Employees, row.Company_linkedin.split('/company/')[1], Today, Comment, row.Phone, row.Company_web || URL, row.Email]
     });
 
-    const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
-    const Range = DB?.getRange(Row1, 1, Rows, Data[0].length);
+    List.forEach(row => {
+        if (!row.Email || List.length == Data.length) return;
+        const RowN = Names!.findIndex((element: any) => element == row.Name) + 1;
+        if (!RowN) return;
+        const Ex = DB!.getRange('L'+RowN+':N'+RowN), ExRow = Ex.getValues().flat();
+        if (ExRow.includes(row.Email)) return;
+        const Comment = Message + (row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : ''), CommentCell = DB!.getRange('K'+RowN);
+        if (Comment != ExRow[0]) CommentCell.setRichTextValue(SpreadsheetApp.newRichTextValue()
+            .setLinkUrl((row.Name_apollo.startsWith('#') ? URL+row.Name_apollo : row.Name_apollo)).setText(Comment).build());
+        Ex.setValues([[row.Phone, row.Company_web || URL, row.Email]]);
+        Updated.push(RowN);
+    });
 
-    DB!.insertRowsAfter(Row1, Rows);
-    Range?.setValues(Data);
-    Persons?.setRichTextValues(Pers);
-    Company?.setRichTextValues(Comp);
-    Comment?.setRichTextValues(Comm);
+    const [Rows, Range] = Data?.length ? [Data.length, DB?.getRange(Row1, 1, Data.length, Data[0].length)] : [0, DB?.getRange(Row0+':'+Row0)];
+    
+    if (Rows) {
+        const Persons = DB?.getRange(Row1, 2, Rows, 1), Company = DB?.getRange(Row1, 7, Rows, 1), Comment = DB?.getRange(Row1, 11, Rows, 1);
+        DB!.insertRowsAfter(Row1, Rows);
+        Range?.setValues(Data);
+        Persons?.setRichTextValues(Pers);
+        Company?.setRichTextValues(Comp);
+        Comment?.setRichTextValues(Comm);
 
-    DB!.getRange(Row1, 1, Rows, 1).insertCheckboxes().check();
-    DB!.getRange('2:2').copyTo(Range!, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+        DB!.getRange(Row1, 1, Rows, 1).insertCheckboxes().check();
+        DB!.getRange('2:2').copyTo(Range!, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+    }
+    if (Updated.length) Updated.forEach(rowN => DB!.getRange(rowN, 1).check());
 
-    const NewRow = DB!.getLastRow(), Done = NewRow - Row1, JSONString = `Last row ${NewRow}: ${JSON.stringify(Range?.getValues()[Done])}`;  
-    const JSONOutput = ContentService.createTextOutput(`${JSONString}\n🧜‍♂️ Lancer has added ${Done} new contact${Rows > 1 ? 's' : ''}!`);
+    const Row = DB!.getLastRow(), Last = Range!.getNumRows() - 1, Msg = `Last row ${Row}: ${JSON.stringify(Range?.getValues()[Last])}`;
+    const Update = Updated.length ? `\n${Updated.length} updated! (Row ${Updated[0]}+)`: (Rows ? '' : `\nNo updates.`);
+    const JSONOutput = ContentService.createTextOutput(`${Msg}\n🧜‍♂️ Lancer has added ${Rows} new contact${Rows == 1 ? '' : 's'}!${Update}`);
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
 }
