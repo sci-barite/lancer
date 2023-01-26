@@ -33,10 +33,12 @@ function doPost(e : any) {
     PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
   else if (JSONString.startsWith('NewUniqueJobs:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
+    Utilities.sleep(5000);
     prepareForSylph('NewUniqueJobs');
   }
   else if (JSONString.startsWith('NewUniqueCands:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueCands", JSONString.replace('NewUniqueCands:', ''));
+    Utilities.sleep(5000);
     prepareForSylph('NewUniqueCands');
   }
   else if (JSONString.startsWith('ApolloList:')) {

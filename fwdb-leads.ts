@@ -119,8 +119,10 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
         const Ex = DB!.getRange('L'+RowN+':N'+RowN), ExRow = Ex.getValues().flat();
         if (ExRow.includes(row.Email)) return;
         const Comment = Message + (row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : ''), CommentCell = DB!.getRange('K'+RowN);
-        if (Comment != ExRow[0]) CommentCell.setRichTextValue(SpreadsheetApp.newRichTextValue()
-            .setLinkUrl((row.Name_apollo.startsWith('#') ? URL+row.Name_apollo : row.Name_apollo)).setText(Comment).build());
+        if (Comment != ExRow[0]) {
+            const CommentLink = SpreadsheetApp.newRichTextValue().setText(ExRow[0]+'\n\n'+Comment);
+            CommentCell.setRichTextValue(CommentLink.setLinkUrl(row.Name_apollo.includes('#') ? URL+row.Name_apollo : row.Name_apollo).build());
+        } 
         Ex.setValues([[row.Phone, row.Company_web || URL, row.Email]]);
         Updated.push(RowN);
     });
@@ -141,7 +143,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
     if (Updated.length) Updated.forEach(rowN => DB!.getRange(rowN, 1).check());
 
     const Row = DB!.getLastRow(), Last = Range!.getNumRows() - 1, Msg = `Last row ${Row}: ${JSON.stringify(Range?.getValues()[Last])}`;
-    const Update = Updated.length ? `\n${Updated.length} updated! (Row ${Updated[0]}+)`: (Rows ? '' : `\nNo updates.`);
+    const Many = Updated.length, Update = Many ? `\n${Many} updated! (Row ${Updated[0]+(Many > 1 ? '+' : '')})`: (Rows ? '' : `\nNo updates.`);
     const JSONOutput = ContentService.createTextOutput(`${Msg}\n🧜‍♂️ Lancer has added ${Rows} new contact${Rows == 1 ? '' : 's'}!${Update}`);
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
