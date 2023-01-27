@@ -98,7 +98,7 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
 
 function ContactsListAppend(List: {[key: string]: string}[]) {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB'), Names = DB?.getRange('B:B').getValues();
-    const Row0 = DB!.getLastRow(), Row1 = Row0 + 1, Today = new Date().toLocaleDateString(), Updated : number[] = [];
+    const Row0 = DB!.getLastRow(), Row1 = Row0 + 1, Today = new Date().toLocaleDateString(), Updated : string[] = [];
     const Status = '0.Imported', Message = 'Contact/list imported via Sylph!', URL = 'https://app.apollo.io/';
     const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
 
@@ -112,19 +112,34 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
                 row.Employees, row.Company_linkedin.split('/company/')[1], Today, Comment, row.Phone, row.Company_web || URL, row.Email]
     });
 
-    List.forEach(row => {
-        if (!row.Email || List.length == Data.length) return;
+    List.length == Data.length ? null : List.forEach(row => {
         const RowN = Names!.findIndex((element: any) => element == row.Name) + 1;
         if (!RowN) return;
-        const Ex = DB!.getRange('L'+RowN+':N'+RowN), ExRow = Ex.getValues().flat();
-        if (ExRow.includes(row.Email)) return;
-        const Comment = Message + (row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : ''), CommentCell = DB!.getRange('K'+RowN);
-        if (Comment != ExRow[0]) {
-            const CommentLink = SpreadsheetApp.newRichTextValue().setText(ExRow[0]+'\n\n'+Comment);
-            CommentCell.setRichTextValue(CommentLink.setLinkUrl(row.Name_apollo.includes('#') ? URL+row.Name_apollo : row.Name_apollo).build());
-        } 
-        Ex.setValues([[row.Phone, row.Company_web || URL, row.Email]]);
-        Updated.push(RowN);
+        let PhoneToEmail = [row.Phone, row.Company_web || URL, row.Email], RowLtoN = DB!.getRange(`L${RowN}:N${RowN}`), UpdatedCells = 0;
+        const JobsComment = row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : '', ExPhoneToEmail = RowLtoN.getValues().flat();
+        const CommentCell = DB!.getRange('K'+RowN), OldComment = CommentCell.getRichTextValue(), OldCommentText = OldComment?.getText();
+        const ContactCell = DB!.getRange('B'+RowN), OldContact = ContactCell.getRichTextValue();
+        const CompanyCell = DB!.getRange('G'+RowN), OldCompany = CompanyCell.getRichTextValue();
+        if ((JobsComment && !OldCommentText?.includes(JobsComment)) || !OldComment?.getLinkUrl()?.includes(row.Name_apollo)) {
+            const Link = SpreadsheetApp.newRichTextValue().setText(`${OldCommentText}\n\nUpdated${JobsComment || ' via Sylph on '+Today}`);
+            CommentCell.setRichTextValue(Link.setLinkUrl(row.Name_apollo.includes('http') ? row.Name_apollo : URL+row.Name_apollo).build());
+            UpdatedCells++
+        }
+        if (OldContact?.getLinkUrl() != row.Name_linkedin) {
+            ContactCell.setRichTextValue(OldContact!.copy().setLinkUrl(row.Name_linkedin).build());
+            DB!.getRange('C'+RowN).setValue(row.Name_linkedin.split('/in/')[1]);
+            UpdatedCells++
+        };
+        if (OldCompany?.getLinkUrl() != row.Company_linkedin) {
+            CompanyCell.setRichTextValue(OldCompany!.copy().setLinkUrl(row.Company_linkedin).build());
+            DB!.getRange('I'+RowN).setValue(row.Company_linkedin.split('/company/')[1]);
+            UpdatedCells++
+        };
+        if (PhoneToEmail.some(val => !ExPhoneToEmail.includes(val))) {
+            RowLtoN.setValues([PhoneToEmail]);
+            ExPhoneToEmail.forEach(val => { if (!PhoneToEmail.includes(val)) UpdatedCells++; });
+        }
+        if (UpdatedCells > 0) Updated.push(`${RowN} (${UpdatedCells} cells)`);
     });
 
     const [Rows, Range] = Data?.length ? [Data.length, DB?.getRange(Row1, 1, Data.length, Data[0].length)] : [0, DB?.getRange(Row0+':'+Row0)];
@@ -140,10 +155,10 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
         DB!.getRange(Row1, 1, Rows, 1).insertCheckboxes().check();
         DB!.getRange('2:2').copyTo(Range!, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
     }
-    if (Updated.length) Updated.forEach(rowN => DB!.getRange(rowN, 1).check());
+    if (Updated.length) Updated.map(row => parseInt(row.split(' (')[0])).forEach(rowN => DB!.getRange(rowN, 1).check());
 
     const Row = DB!.getLastRow(), Last = Range!.getNumRows() - 1, Msg = `Last row ${Row}: ${JSON.stringify(Range?.getValues()[Last])}`;
-    const Many = Updated.length, Update = Many ? `\n${Many} updated! (Row ${Updated[0]+(Many > 1 ? '+' : '')})`: (Rows ? '' : `\nNo updates.`);
+    const Many = Updated.length, Update = Many ? `\n${Many} updated! Row ${Updated[0]+(Many > 1 ? '+' : '')}`: (Rows ? '' : `\nNo updates.`);
     const JSONOutput = ContentService.createTextOutput(`${Msg}\n🧜‍♂️ Lancer has added ${Rows} new contact${Rows == 1 ? '' : 's'}!${Update}`);
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
