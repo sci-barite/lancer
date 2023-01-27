@@ -102,7 +102,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
     const Status = '0.Imported', Message = 'Contact/list imported via Sylph!', URL = 'https://app.apollo.io/';
     const [Pers, Comp, Comm] : GoogleAppsScript.Spreadsheet.RichTextValue[][][] = [[], [], []];
 
-    const Data = List.filter(row => Names!.findIndex((element: any) => element == row.Name) < 0).map(row => {
+    const Data = List.filter(row => Names!.findIndex((name: any) => name == row.Name) < 0).map(row => {
         const ApolloLink = row.Name_apollo.startsWith('#') ? URL+row.Name_apollo : row.Name_apollo;
         const Comment = Message + (row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : '');
         Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin || URL).build()]);
