@@ -115,7 +115,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
     List.length == Data.length ? null : List.forEach(row => {
         const RowN = Names!.findIndex((element: any) => element == row.Name) + 1;
         if (!RowN) return;
-        let PhoneToEmail = [row.Phone, row.Company_web || URL, row.Email], RowLtoN = DB!.getRange(`L${RowN}:N${RowN}`), UpdatedCells = 0;
+        const PhoneToEmail = [row.Phone, row.Company_web || URL, row.Email], RowLtoN = DB!.getRange(`L${RowN}:N${RowN}`), UpdatedCells = [];
         const JobsComment = row.Jobs? buildJobsString(row.Jobs, row.More).split('!')[1] : '', ExPhoneToEmail = RowLtoN.getValues().flat();
         const CommentCell = DB!.getRange('K'+RowN), OldComment = CommentCell.getRichTextValue(), OldCommentText = OldComment?.getText();
         const ContactCell = DB!.getRange('B'+RowN), OldContact = ContactCell.getRichTextValue();
@@ -123,23 +123,23 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
         if ((JobsComment && !OldCommentText?.includes(JobsComment)) || !OldComment?.getLinkUrl()?.includes(row.Name_apollo)) {
             const Link = SpreadsheetApp.newRichTextValue().setText(`${OldCommentText}\n\nUpdated${JobsComment || ' via Sylph on '+Today}`);
             CommentCell.setRichTextValue(Link.setLinkUrl(row.Name_apollo.includes('http') ? row.Name_apollo : URL+row.Name_apollo).build());
-            UpdatedCells++
+            UpdatedCells.push('Comment');
         }
         if (OldContact?.getLinkUrl() != row.Name_linkedin) {
             ContactCell.setRichTextValue(OldContact!.copy().setLinkUrl(row.Name_linkedin).build());
             DB!.getRange('C'+RowN).setValue(row.Name_linkedin.split('/in/')[1]);
-            UpdatedCells++
+            UpdatedCells.push('Contact link/id');
         };
         if (OldCompany?.getLinkUrl() != row.Company_linkedin) {
             CompanyCell.setRichTextValue(OldCompany!.copy().setLinkUrl(row.Company_linkedin).build());
             DB!.getRange('I'+RowN).setValue(row.Company_linkedin.split('/company/')[1]);
-            UpdatedCells++
+            UpdatedCells.push('Company link/id');
         };
         if (PhoneToEmail.some(val => !ExPhoneToEmail.includes(val))) {
             RowLtoN.setValues([PhoneToEmail]);
-            ExPhoneToEmail.forEach(val => { if (!PhoneToEmail.includes(val)) UpdatedCells++; });
+            ExPhoneToEmail.forEach((val, col) => { if (!PhoneToEmail.includes(val)) UpdatedCells.push(['Phone', 'Website', 'Email'][col])});
         }
-        if (UpdatedCells > 0) Updated.push(`${RowN} (${UpdatedCells} cells)`);
+        if (UpdatedCells.length > 0) Updated.push(`${RowN} (${UpdatedCells.join(', ')})`);
     });
 
     const [Rows, Range] = Data?.length ? [Data.length, DB?.getRange(Row1, 1, Data.length, Data[0].length)] : [0, DB?.getRange(Row0+':'+Row0)];

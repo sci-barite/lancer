@@ -114,12 +114,12 @@ function tickerUpdate(verbose? : string, warn? : string) {
         statusSheet.setName("⚠️ Imp is Indexing!").setTabColor("red");
         return;
     }
-    const [Jobs, JobsDoubles, Conts, ContsDoubles] = ['NewUniqueJobs', 'NewUniqueJobs.doubles', 'NewUniqueCConts', 'NewUniqueCConts.doubles'];
+    const [Jobs, JobsDoubles, Conts, ContsDoubles] = ['UniqueJobs', 'NewUniqueJobs.doubles', 'UniqueCConts', 'NewUniqueCConts.doubles'];
     const props = PropertiesService.getScriptProperties();
     const lDoubles = props.getProperty(JobsDoubles) ? JSON.parse(props.getProperty(JobsDoubles) as string) : [];
     const cDoubles = props.getProperty(ContsDoubles) ? JSON.parse(props.getProperty(ContsDoubles) as string) : [];
     const doubles = (props.getProperty(JobsDoubles) ? lDoubles.length : 0) + (props.getProperty(ContsDoubles) ? cDoubles.length : 0);
-    const timeStamp = (props.getProperty(Jobs+'.last') as string).slice(0,-6);
+    const timeStamp = (props.getProperty('New'+Jobs+'.last') as string).slice(0,-6);
   
     if (doubles == 0 && verbose) {
         const [badJobs, badConts] = [props.getProperty(Jobs+'.bad'), props.getProperty(Conts+'.bad')];
