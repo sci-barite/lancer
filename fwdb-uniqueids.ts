@@ -122,7 +122,7 @@ function tickerUpdate(verbose? : string, warn? : string) {
     const timeStamp = (props.getProperty('New'+Jobs+'.last') as string).slice(0,-6);
   
     if (doubles == 0 && verbose) {
-        const [badJobs, badConts] = [props.getProperty(Jobs+'.bad'), props.getProperty(Conts+'.bad')];
+        const [badJobs, badConts] = [props.getProperty('New'+Jobs+'.bad'), props.getProperty('New'+Conts+'.bad')];
         statusSheet.setName("No doubles! - Last check: "+timeStamp).setTabColor("green").clear()
           .appendRow(['Unique jobs:', JSON.parse(props.getProperty(Jobs) as string).length])
           .appendRow(['Unique contacts:', JSON.parse(props.getProperty(Conts) as string).length])
