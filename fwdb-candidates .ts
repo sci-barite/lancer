@@ -27,7 +27,8 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
         const prevVals = Row.getValues().flat();
         [prevVals[2], prevVals[3], prevVals[4], prevVals[5], prevVals[6], prevVals[9]] = 
         [RowData[2], RowData[3], RowData[4], 
-        (RowData[5] == 'Other bookmarks' ? prevVals[5] : RowData[5]), prevVals[6]+', '+RowData[6], prevVals[9]+'\nUpdated via Sylph!'];
+        (RowData[5] == 'Other bookmarks' ? prevVals[5] : RowData[5]), 
+        (prevVals[6].includes(RowData[6]) ? prevVals[6] : prevVals[6]+', '+RowData[6]), prevVals[9]+'\nUpdated via Sylph!'];
         Row.setValues([prevVals]);
     }
     const Link = SpreadsheetApp.newRichTextValue().setText(Get.name).setLinkUrl(Get.url).build();
