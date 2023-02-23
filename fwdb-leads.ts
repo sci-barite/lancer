@@ -67,10 +67,10 @@ function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: num
         Update += ' - Applicants updated from '+Row[17]+' to '+Get.app+'.\n';
         DB?.getRange('T'+RowN).setValue(Get.app);
     }
-    if (!Row[8] && Get.person != "NA") {
+    if (Get.person != "NA") {
         const PersonLink = SpreadsheetApp.newRichTextValue().setText(Get.person).setLinkUrl(Get.personlink).build();
         DB?.getRange('K'+RowN).setRichTextValue(PersonLink);
-        Update += ' - Contact person added: '+Get.person+'.\n';
+        Update += ' - Contact person updated: '+Get.person+'.\n';
     }
     if (Update.length <= 10) Update += ' - Nothing to update.'
 
