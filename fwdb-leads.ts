@@ -159,7 +159,12 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
 
     const Row = DB!.getLastRow(), Last = Range!.getNumRows() - 1, Msg = `Last row ${Row}: ${JSON.stringify(Range?.getValues()[Last])}`;
     const Many = Updated.length, Update = Many ? `\n${Many} updated! Row ${Updated[0]+(Many > 1 ? '+' : '')}`: (Rows ? '' : `\nNo updates.`);
-    const JSONOutput = ContentService.createTextOutput(`${Msg}\n🧜‍♂️ Lancer has added ${Rows} new contact${Rows == 1 ? '' : 's'}!${Update}`);
+    const Response = {  Row: Row,
+                        Added: Rows,
+                        Update: Many ? true : false, 
+                        Updated: Updated[0], 
+                        Message: `${Msg}\n🧜‍♂️ Lancer has added ${Rows} new contact${Rows == 1 ? '' : 's'}!${Update}`};
+    const JSONOutput = ContentService.createTextOutput(JSON.stringify(Response));
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
 }
