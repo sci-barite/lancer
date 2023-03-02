@@ -140,6 +140,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
             ExPhoneToEmail.forEach((val, col) => { if (!PhoneToEmail.includes(val)) UpdatedCells.push(['Phone', 'Website', 'Email'][col])});
         }
         if (UpdatedCells.length > 0) Updated.push(`${RowN} (${UpdatedCells.join(', ')})`);
+        DB!.getRange('H'+RowN).setValue(row.Employees);
     });
 
     const [Rows, Range] = Data?.length ? [Data.length, DB?.getRange(Row1, 1, Data.length, Data[0].length)] : [0, DB?.getRange(Row0+':'+Row0)];

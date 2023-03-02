@@ -6,6 +6,7 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     switch (db) {
         case 'DB': db = SpreadsheetApp.openById(getFWDB()).getSheetByName("DB")!; break;
         case 'Free': db = SpreadsheetApp.openById(getFWDB()).getSheetByName("FreelanceDB")!; break;
+        case 'Contacts': db = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName("ContactsDB")!; break;
         default: return JSONOutput;
     }
 
@@ -13,6 +14,24 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
     //const Names = db.getRange('A:A').getValues();
     //const Search = (element: any) => element == Get.name;
     //if (Names?.findIndex(Search) != -1) var name = 'DUPLICATE! '+Get.name; else var name : string = Get.name;
+
+    if (db.getSheetName() == 'ContactsDB') {
+        const ID = Get.url.split('in/')[1].replace('/','');
+        const Links = db?.getRange('B:B').getValues();
+        const Search = (element: any) => element[0].includes(ID);
+        const RowN : number = Links!.findIndex(Search) + 1;
+        const ORowRange = db.getRange(RowN,1,1,16), ORow = ORowRange.getValues();
+        const CompID = Get.status.includes('company') ? Get.status.split('company/')[1].replace('/','') : Get.status;
+        const Row = [true, Get.name, ID, ORow[0][3], Get.pos, Get.loc, Get.eng, '', CompID, new Date(), 'Sylph!', '', '', '', '', ''];
+        ORowRange.setValues([Row]);
+        const PersLink = SpreadsheetApp.newRichTextValue().setText(Get.name).setLinkUrl(Get.url).build();
+        db.getRange('B'+RowN).setRichTextValue(PersLink);
+        const CompLink = SpreadsheetApp.newRichTextValue().setText(Get.eng).setLinkUrl(Get.status.slice(0, -1)).build();
+        db.getRange('G'+RowN).setRichTextValue(CompLink);
+        JSONString = JSON.stringify('Row '+RowN+': '+ORowRange?.getValues());  
+        JSONOutput = ContentService.createTextOutput(JSONString+"\n🧚‍♀️ Sylph's spell was casted successfully!");
+        return JSONOutput;
+    }
 
     const RowData = [
         Get.name, '', Get.status, 'Sylph', Today, decodeURIComponent(Get.pos), decodeURIComponent(Get.skills), 
