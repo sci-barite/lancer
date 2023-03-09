@@ -96,7 +96,7 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
     return JSONOutput;
 }
 
-function ContactsList(List: ApolloContact[]) {
+function processApolloContacts(List: ApolloContact[]) {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB'), Names = DB?.getRange('B:B').getValues();
     const Row0 = DB!.getLastRow(), Row1 = Row0 + 1, Today = new Date().toLocaleDateString(), Updated : string[] = [];
     const Status = '0.Imported', Message = 'Contact/list imported via Sylph!', URL = 'https://app.apollo.io/';
@@ -108,8 +108,10 @@ function ContactsList(List: ApolloContact[]) {
         Pers.push([SpreadsheetApp.newRichTextValue().setText(row.Name).setLinkUrl(row.Name_linkedin || URL).build()]);
         Comp.push([SpreadsheetApp.newRichTextValue().setText(row.Company).setLinkUrl(row.Company_linkedin || URL).build()]);
         Comm.push([SpreadsheetApp.newRichTextValue().setText(Comment).setLinkUrl(ApolloLink).build()]);
+        
         return ['', row.Name, row.Name_linkedin ? row.Name_linkedin.split('/in/')[1] : 'NA', Status, row.Title, row.Location, row.Company, 
-                row.Employees, row.Company_linkedin.split('/company/')[1], Today, Comment, row.Phone, row.Company_web || URL, row.Email]
+                row.Employees, row.Company_linkedin ? row.Company_linkedin.split('/company/')[1] : 'NA', Today, Comment, row.Phone, 
+                row.Company_web || URL, row.Email]
     });
 
     List.length == Data.length ? null : List.forEach(row => {
@@ -125,12 +127,12 @@ function ContactsList(List: ApolloContact[]) {
             CommentCell.setRichTextValue(Link.setLinkUrl(row.Name_apollo.includes('http') ? row.Name_apollo : URL+row.Name_apollo).build());
             UpdatedCells.push('Comment');
         }
-        if (OldContact?.getLinkUrl() != row.Name_linkedin) {
+        if (row.Name_linkedin && OldContact?.getLinkUrl() != row.Name_linkedin) {
             ContactCell.setRichTextValue(OldContact!.copy().setLinkUrl(row.Name_linkedin).build());
             DB!.getRange('C'+RowN).setValue(row.Name_linkedin.split('/in/')[1]);
             UpdatedCells.push('Contact link/id');
         };
-        if (OldCompany?.getLinkUrl() != row.Company_linkedin) {
+        if (row.Company_linkedin && OldCompany?.getLinkUrl() != row.Company_linkedin) {
             CompanyCell.setRichTextValue(OldCompany!.copy().setLinkUrl(row.Company_linkedin).build());
             DB!.getRange('I'+RowN).setValue(row.Company_linkedin.split('/company/')[1]);
             UpdatedCells.push('Company link/id');
