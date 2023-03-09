@@ -96,7 +96,7 @@ function ContactsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: 
     return JSONOutput;
 }
 
-function ContactsListAppend(List: {[key: string]: string}[]) {
+function ContactsList(List: ApolloContact[]) {
     const DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB'), Names = DB?.getRange('B:B').getValues();
     const Row0 = DB!.getLastRow(), Row1 = Row0 + 1, Today = new Date().toLocaleDateString(), Updated : string[] = [];
     const Status = '0.Imported', Message = 'Contact/list imported via Sylph!', URL = 'https://app.apollo.io/';
@@ -141,6 +141,7 @@ function ContactsListAppend(List: {[key: string]: string}[]) {
         }
         if (UpdatedCells.length > 0) Updated.push(`${RowN} (${UpdatedCells.join(', ')})`);
         DB!.getRange('H'+RowN).setValue(row.Employees);
+        DB!.getRange('E'+RowN+':F'+RowN).setValues([[row.Title, row.Location]]);
     });
 
     const [Rows, Range] = Data?.length ? [Data.length, DB?.getRange(Row1, 1, Data.length, Data[0].length)] : [0, DB?.getRange(Row0+':'+Row0)];

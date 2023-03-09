@@ -3,6 +3,12 @@
  * Gets data sent by my Sylph Chrome Extension, and writes an entry on Google Sheets.
  * Now writing data coming from LinkedIn, Upwork, Djinni, and Apollo too...
  */
+
+type ApolloContact = {
+  Name: string, Name_linkedin: string, Name_apollo: string, Title: string, Location: string, Company: string, 
+  Employees: string, Company_linkedin: string, Company_web: string, More: string, Phone: string, Email: string, Jobs: string
+};
+
 function doGet(e: { parameter: any; }) {
     const Get = e.parameter;
     const JSONString = JSON.stringify([Get.url]);  
@@ -42,8 +48,8 @@ function doPost(e : any) {
     prepareForSylph('NewUniqueCands');
   }
   else if (JSONString.startsWith('ApolloList:')) {
-    const payload : {[key: string]: string}[] = JSON.parse(JSONString.replace('ApolloList:', ''))
-    return ContactsListAppend(payload);
+    const payload = JSON.parse(JSONString.replace('ApolloList:', ''))
+    return ContactsList(payload as ApolloContact[]);
   }
   return JSONOutput;
 }
