@@ -4,11 +4,6 @@
  * Now writing data coming from LinkedIn, Upwork, Djinni, and Apollo too...
  */
 
-type ApolloContact = {
-  Name: string, Name_linkedin: string, Name_apollo: string, Title: string, Location: string, Company: string, 
-  Employees: string, Company_linkedin: string, Company_web: string, More: string, Phone: string, Email: string, Jobs: string
-};
-
 function doGet(e: { parameter: any; }) {
     const Get = e.parameter;
     const JSONString = JSON.stringify([Get.url]);  

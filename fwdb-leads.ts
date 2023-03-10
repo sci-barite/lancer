@@ -45,6 +45,30 @@ function LeadsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleA
     return JSONOutput;
 }
 
+function Get(...args : string[]) : {[key: string]: any} {
+    const Pack : {[key: string]: any} = {};
+    Pack.Today = new Date().toLocaleDateString();
+    if (args.includes('ContactsDB')) {
+        Pack.Cols = {
+            '☑️': 0, Name: 1, Name_id: 2, Status: 3, Title: 4, Location: 5, Company: 6, Employees: 7, 
+            Company_id: 8, Date: 9, Comment: 10, Phone: 11, Company_web: 12, Email: 13
+        };
+        Pack.Default = {
+            Status: '0.Imported', 
+            NewMessage: 'Imported via Sylph!',
+            OldMessage: 'Updated via Sylph on '+Pack.Today,
+            URL: 'https://app.apollo.io/',
+            NA: 'N/A'
+        };
+        Pack.DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+        Pack.Names = Pack.DB.getRange('B2:B').getValues().flat();
+    }
+    Pack.LastRow = Pack.DB ? Pack.DB.getLastRow() : null;
+    Pack.NewRow = Pack.LastRow + 1 ?? null;
+    Pack.DB ? Pack.RichTextRow = Pack.DB.getRange(2, 2, 1, 10) : null;
+    return Pack;
+}
+
 function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: number) : GoogleAppsScript.Content.TextOutput {
     const Row = DB?.getRange('C'+RowN+':T'+RowN).getValues().flat()!;
     const StatusField = DB?.getRange('D'+RowN), Status = StatusField.getValue();
@@ -77,11 +101,6 @@ function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: num
     const JSONOutput = ContentService.createTextOutput("🧜‍♂️ "+Update+"\n🧚‍♀️ Sylph's spell was casted successfully!");
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
-}
-
-function buildJobsString(number: string, jobs: string) {
-    const sanitized = jobs.split(',').map(job => job.includes('?') ? job.split('?')[0] : job).toString().replaceAll(',', '\n');
-    return ' via Sylph Chrome Extension!\n\n'+number+' engineering jobs posted.\n\n'+sanitized.replaceAll('htt', '➡️ htt');
 }
 
 function ContactsAppend(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet) : GoogleAppsScript.Content.TextOutput {

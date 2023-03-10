@@ -15,15 +15,11 @@ type ApolloContact = {
   };
 
 type DBContact = Partial<ApolloContact> & {
-    Row?: number,
-    Status?: string,
-    Name_link?: GoogleAppsScript.Spreadsheet.RichTextValue,
-    Name_id?: string,
-    Company_link?: GoogleAppsScript.Spreadsheet.RichTextValue,
-    Company_id?: string,
-    Comment?: string,
-    Comment_link?: GoogleAppsScript.Spreadsheet.RichTextValue,
-    Date?: string,
+    Row: string,
+    Comment: string,
+    Name_id: string,
+    Company_id: string,
+    Apollo_link: string
 }
 
 function buildJobsString(number: string, jobs: string) {
@@ -32,103 +28,73 @@ function buildJobsString(number: string, jobs: string) {
 }
   
 function ContactsList(Contacts: ApolloContact[]) {
-    const   DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB')!, 
-            Names = DB.getRange('B:B').getValues().flat(),
-            LastRow = DB.getLastRow(), NewRow = LastRow + 1,
-            Today = new Date().toLocaleDateString(),
-            Default = {    
-                Status: '0.Imported', 
-                NewMessage: 'Imported via Sylph!',
-                OldMessage: 'Updated via Sylph on '+Today,
-                URL: 'https://app.apollo.io/',
-                NA: 'N/A'
-            },
-            Cols = {
-                '☑️': 0, Name: 1, Name_id: 2, Status: 3, Title: 4, Location: 5,
-                Company: 6, Employees: 7, Company_id: 8, Date: 9, Comment: 10,
-                Phone: 11, Company_web: 12, Email: 13
-            },
-            NewContacts : DBContact[] = [],
-            UpdContacts : DBContact[] = [];
+    const get = Get('ContactsDB')!;
+    if (!get.DB) return;
+    const [NewContacts, UpdContacts] : DBContact[][] = [[], []];
+    const [Field, Link] = [['Name', 'Company', 'Comment'], ['Name_linkedin', 'Company_linkedin', 'Apollo_link']];
 
     Contacts.forEach(Contact => {
-        const   Processed : DBContact = {...Contact},
-                Row = Names!.findIndex((name: string) => name == Contact.Name) + 1,
-                OldVal = Row ? DB.getRange(`${Row}:${Row}`).getValues().flat() : [],
-                Jobs = Contact.Jobs? buildJobsString(Contact.Jobs, Contact.More).split('!')[1] : '',
-                ApolloLink = `${Contact.Name_apollo.startsWith('#') ? Default.URL : ''}${Contact.Name_apollo}`
-
-        Processed.Row = Row;
-        Processed.Status = Default.Status;
-        Processed.Date = Today;
-        Processed.Name_link = SpreadsheetApp.newRichTextValue()
-            .setText(Contact.Name).setLinkUrl(Contact.Name_linkedin ?? ApolloLink).build();
-        Processed.Company_link = SpreadsheetApp.newRichTextValue()
-            .setText(Contact.Company).setLinkUrl(Contact.Company_linkedin ?? ApolloLink).build();
-        Processed.Comment = Row ? `${OldVal[Cols.Comment]}\n\n${Jobs}${Default.OldMessage}` : `${Default.NewMessage}${Jobs}`;
-        Processed.Comment_link = SpreadsheetApp.newRichTextValue()
-            .setText(Processed.Comment).setLinkUrl(ApolloLink).build();
-        Processed.Name_id = !Contact.Name_linkedin ? Default.NA :
-            Contact.Name_linkedin.split('/in/')[1];
-        Processed.Company_id = !Contact.Company_linkedin ? Default.NA :
-            Contact.Company_linkedin.split('/company/')[1];
-        
-        Row ? UpdContacts.push(Processed) : NewContacts.push(Processed);
+        const Entry : DBContact = {
+            ...Contact as ApolloContact,
+            Row: get.Names.findIndex((name: string) => name == Contact.Name) + 1,
+            Comment: `${get.Default.NewMessage}${Contact.Jobs? buildJobsString(Contact.Jobs, Contact.More).split('!')[1] : ''}`,
+            Apollo_link: `${Contact.Name_apollo.startsWith('#') ? get.Default.URL : ''}${Contact.Name_apollo}`,
+            Name_id: !Contact.Name_linkedin.includes('/in/') ? '' : Contact.Name_linkedin.split('/in/')[1].replace('/', ''),
+            Company_id: !Contact.Name_linkedin.includes('/company/') ? '' : Contact.Name_linkedin.split('/company/')[1].replace('/', '')
+        };
+        Entry.Row ? UpdContacts.push(Entry) : NewContacts.push(Entry);
     });
 
-    const writeRow = (DBContact: DBContact) => Object.entries(Cols).map((col) => DBContact[col[0] as keyof DBContact] ?? '');
+    const writeRow = (DBContact: DBContact) => Object.entries(get.Cols).map((col) => DBContact[col[0] as keyof DBContact] ?? '');
 
     const NewRows = NewContacts.length, UpdRows = UpdContacts.length;
 
     if (NewRows) {
-        const   Data = NewContacts.map(contact => writeRow(contact)),
+        const   Data = (get.NewContacts as DBContact[]).map(contact => writeRow(contact)),
                 Rows = Data.length,
-                Area = DB.getRange(NewRow, Cols.Name, Rows, Data[0].length),
-                Name = DB.getRange(NewRow, Cols.Name + 1, Rows, 1),
-                Comp = DB.getRange(NewRow, Cols.Company + 1, Rows, 1),
-                Comm = DB.getRange(NewRow, Cols.Comment + 1, Rows, 1),
-                [Ranges, Rich] = [[Name, Comp, Comm], ['Name_link', 'Company_link', 'Comment_link']];
+                Area = get.DB.getRange(get.NewRow, get.Cols.Name, Rows, Data[0].length),
+                Name = get.DB.getRange(get.NewRow, get.Cols.Name + 1, Rows, 1),
+                Comp = get.DB.getRange(get.NewRow, get.Cols.Company + 1, Rows, 1),
+                Comm = get.DB.getRange(get.NewRow, get.Cols.Comment + 1, Rows, 1),
+                Ranges = [Name, Comp, Comm];
 
-        DB!.insertRowsAfter(NewRow, Rows);
+        get.DB.insertRowsAfter(get.NewRow, Rows);
         Area.setValues(Data);
-        Ranges.forEach(Range => Range.setRichTextValues(NewContacts.map((cont, i) => {
-            return [cont[Rich[i] as keyof DBContact] as GoogleAppsScript.Spreadsheet.RichTextValue];
+        Ranges.forEach(Range => Range.setRichTextValues(NewContacts.map((New, i) => {
+            SpreadsheetApp.newRichTextValue().setText(New[Field[i] as keyof DBContact]!).setLinkUrl(New[Link[i] as keyof DBContact]!).build();
         })));
-        DB!.getRange(NewRow, Cols['☑️'] + 1, Rows, 1).insertCheckboxes().check();
-        DB!.getRange('2:2').copyTo(Area, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+        get.DB!.getRange(get.NewRow, get.Cols['☑️'] + 1, Rows, 1).insertCheckboxes().check();
+        get.DB!.getRange('2:2').copyTo(Area, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
     }
 
     if (UpdRows) {
-        UpdContacts.forEach(contact => {
-            const   Data = [writeRow(contact)],
-                    Row = DB.getRange(contact.Row!, Cols.Name, 1, Data[0].length),
-                    Name = DB.getRange(contact.Row!, Cols.Name + 1, 1, 1),
-                    Comp = DB.getRange(contact.Row!, Cols.Company + 1, 1, 1),
-                    Comm = DB.getRange(contact.Row!, Cols.Comment + 1, 1, 1),
-                    [Ranges, Rich] = [[Name, Comp, Comm], ['Name_link', 'Company_link', 'Comment_link']];
-            
-            Row.setValues(Data);
+        UpdContacts.forEach(Contact => {
+            const   Row = get.DB.getRange(Contact.Row!, get.Cols.Name, 1, Object.keys(get.Cols).length),
+                    Old = Row.getValues(),
+                    Name = get.DB.getRange(Contact.Row!, get.Cols.Name + 1, 1, 1),
+                    Comp = get.DB.getRange(Contact.Row!, get.Cols.Company + 1, 1, 1),
+                    Comm = get.DB.getRange(Contact.Row!, get.Cols.Comment + 1, 1, 1),
+                    Ranges = [Name, Comp, Comm];
+            Contact.Comment = 
+                `${Old[get.Cols.Comment]}\n
+                ${Contact.Jobs ? buildJobsString(Contact.Jobs, Contact.More!).split('!')[1] : ''}${get.Default.OldMessage}`;
+
+            Row.setValues(writeRow(Contact));
             Ranges.forEach((Range, i) => {
-                Range.setRichTextValue(contact[Rich[i] as keyof DBContact] as GoogleAppsScript.Spreadsheet.RichTextValue);
+                const RichText = SpreadsheetApp.newRichTextValue()
+                    .setText(Contact[Field[i] as keyof DBContact]!).setLinkUrl(Contact[Link[i] as keyof DBContact]!).build();
+                Range.setRichTextValue(RichText);
             });
-            DB!.getRange(contact.Row!, Cols['☑️'] + 1, 1, 1).check();
+            get.DB!.getRange(Contact.Row!, get.Cols['☑️'] + 1, 1, 1).check();
         })
     }
 
-    const   Row = DB.getLastRow(), 
-            Msg = `Last row ${Row}: ${JSON.stringify(DB.getRange(`${Row}:${Row}`).getValues())}`,
-            Update = UpdRows ? `\n${UpdRows} updated! Row ${UpdContacts[0].Row+(UpdRows > 1 ? '+' : '')}`
-             : (NewRows ? '' : `\nNo updates.`);
-    
-    const Response = {
-        Row: Row,
-        Added: NewRows,
-        Update: UpdRows ? true : false, 
-        Updated: `${UpdContacts[0].Row}`,
-        Message: `${Msg}\n🧜‍♂️ Lancer has added ${NewRows} new contact${NewRows == 1 ? '' : 's'}!${Update}`
-    };
+    const Resp = {Row: get.DB.getLastRow() as number, Added: NewRows, Update: UpdRows ? true : false, Updated: '', Message: ''};
+    Resp.Updated = `${UpdContacts[0].Row}`;
+    const Msg = `Last row ${Resp.Row}: ${JSON.stringify(get.DB.getRange(`${Resp.Row}:${Resp.Row}`).getValues())}`;
+    Resp.Message = `${Msg}\n🧜‍♂️ Lancer has added ${NewRows} new contact${NewRows == 1 ? '' : 's'}!${Resp.Update}`;
 
-    const JSONOutput = ContentService.createTextOutput(JSON.stringify(Response));
+    const JSONOutput = ContentService.createTextOutput(JSON.stringify(Resp));
     JSONOutput.setMimeType(ContentService.MimeType.JSON);
     return JSONOutput;
 }

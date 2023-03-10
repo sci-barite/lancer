@@ -19,7 +19,7 @@ function FWDBCandidates (Get : any, db : string | GoogleAppsScript.Spreadsheet.S
         const ID = Get.url.split('in/')[1].replace('/','');
         const Links = db?.getRange('B:B').getValues();
         const Search = (element: any) => element[0].includes(ID);
-        const RowN : number = Links!.findIndex(Search) + 1;
+        const RowN : number = Links!.findIndex(Search) + 1 || db!.getLastRow() + 1;
         const ORowRange = db.getRange(RowN,1,1,16), ORow = ORowRange.getValues();
         const CompID = Get.status.includes('company') ? Get.status.split('company/')[1].replace('/','') : Get.status;
         const Row = [true, Get.name, ID, ORow[0][3], Get.pos, Get.loc, Get.eng, '', CompID, new Date(), 'Sylph!', '', '', '', '', ''];
