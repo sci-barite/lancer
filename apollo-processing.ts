@@ -60,7 +60,7 @@ function ContactsList(Contacts: ApolloContact[]) {
         const Jobs = Contact.Jobs? buildJobsString(Contact.Jobs, Contact.More).split('!')[1] : '';  // Maybe Sylph should do this instead.
         const Entry : DBContact = {
             ...get.Default,
-            ...Contact as ApolloContact,
+            ...Contact,
             Row: ExRow,
             Comment: `${ExRow ? '' : get.Default.NewMessage}${Jobs}${ExRow ? '\n'+get.Default.OldMessage : ''}`,
             Name_id: !Contact.Name_linkedin ? '' : Contact.Name_linkedin.split('/in/')[1].replace('/', ''),
@@ -86,18 +86,18 @@ function ContactsList(Contacts: ApolloContact[]) {
         const RowIndex = Upd ? Contacts.map(Contact => Contact.Row) : [];
         if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // Sorting to get the smallest value, and report to Sylph.
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
+
         // Regular values. Here the main difficulty is updating: rows are found via indexOf on Rows, which has the same order as the source.
         const Values = Contacts.map(Contact => writeRow(Contact)), Columns = Values[0].length;
         if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);   // We insert new rows before so we never miss with getRange, below.
         const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Columns);   // Avoiding magic numbers as much as possible.
+        
         // RichText values. We build them all first, then pick if updating. Link in Comment was moved to Title to reduce to a single range.
-        const Riches = Values.map((Cols, Row) => 
-            Cols.slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
-                RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
-                    .setText(Field as string).setLinkUrl(Contacts[Row][Link[RichCols.indexOf(Col)] as keyof DBContact] as string).build()
-                    : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
-            )
-        );
+        const Riches = Values.map((Cols, Row) => Cols.slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
+            RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
+                .setText(Field as string).setLinkUrl(Contacts[Row][Link[RichCols.indexOf(Col)] as keyof DBContact] as string).build()
+                : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
+        ));
         const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company);
         
         ValueRange.setValues(Upd ? updateRows(Values, ValueRange, RowIndex, FirstRow) : Values);
