@@ -20,7 +20,7 @@ type DBContact = Partial<ApolloContact> & {
     Name_id: string,
     Company_id: string,
     Apollo_link: string
-}
+};
 
 function Get(...args : string[]) : {[key: string]: any} {
     const Pack : {[key: string]: any} = {};
@@ -39,7 +39,6 @@ function Get(...args : string[]) : {[key: string]: any} {
     }
     Pack.LastRow = Pack.DB ? Pack.DB.getLastRow() : null;
     Pack.NewRow = Pack.LastRow + 1 ?? null;
-    Pack.DB ? Pack.RichTextRow = Pack.DB.getRange(2, 2, 1, 10) : null;
     return Pack;
 }
 
@@ -69,8 +68,9 @@ function ContactsList(Contacts: ApolloContact[]) {
         };
         Entry.Row ? UpdContacts.push(Entry) : NewContacts.push(Entry);
     });
-
-    const writeRow = (DBContact: DBContact) => Object.keys(get.Cols).map((col) => DBContact[col as keyof DBContact] ?? '');
+    
+    type RowContact = Omit<DBContact, 'Row'>;
+    const writeRow = (DBContact: RowContact) => Object.keys(get.Cols).map((col) => DBContact[col as keyof RowContact] ?? '');
     const updateRows = (Values: any[][], Range: GoogleAppsScript.Spreadsheet.Range, Index: number[], FirstRow: number, Rich?: string) =>
         (Rich ? Range.getRichTextValues() : Range.getValues()).map((Cols, RowN) => {
             const Row = Index.indexOf(FirstRow + RowN);
@@ -84,12 +84,14 @@ function ContactsList(Contacts: ApolloContact[]) {
         const DataLength = Contacts.length
         if (!DataLength) return;
         const RowIndex = Upd ? Contacts.map(Contact => Contact.Row) : [];
-        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // Sorting to get the smallest value, and report to Sylph.
+        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // To get the smallest value, and report nicely to Sylph.
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
+
         // Regular values. Here the main difficulty is updating: rows are found via indexOf on Rows, which has the same order as the source.
         const Values = Contacts.map(Contact => writeRow(Contact)), Columns = Values[0].length;
-        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);   // We insert new rows before so we never miss with getRange, below.
-        const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Columns);   // Avoiding magic numbers as much as possible.
+        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);                               // So we never miss with getRange, below.
+        const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Columns);     // Avoiding magic numbers as much as possible.
+        
         // RichText values. We build them all first, then pick if updating. Link in Comment was moved to Title to reduce to a single range.
         const Riches = Values.map((Cols, Row) => 
             Cols.slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
