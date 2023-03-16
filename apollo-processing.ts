@@ -83,6 +83,17 @@ function ContactsList(Contacts: ApolloContact[]) {
         // Setup phase. We want to know how much we have in terms of rows. For updates, we want everything from first row to last.
         const DataLength = Contacts.length
         if (!DataLength) return;
+        /*const RowIndex : number[] = [], Values : string[][] = [], Riches : GoogleAppsScript.Spreadsheet.RichTextValue[][] = [];
+        Contacts.forEach((Contact, Row) => {
+            RowIndex.push(Contact.Row);
+            Values.push(writeRow(Contact));
+            Riches.push(Values[Row].slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
+                RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
+                    .setText(Field as string).setLinkUrl(Contact[Link[RichCols.indexOf(Col)] as keyof DBContact] as string).build()
+                    : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
+                )
+            )
+        });*/
         const RowIndex = Upd ? Contacts.map(Contact => Contact.Row) : [];
         if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // To get the smallest value, and report nicely to Sylph.
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
@@ -101,7 +112,7 @@ function ContactsList(Contacts: ApolloContact[]) {
             )
         );
         const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company);
-        
+
         ValueRange.setValues(Upd ? updateRows(Values, ValueRange, RowIndex, FirstRow) : Values);
         RichRange.setRichTextValues(Upd ? updateRows(Riches, RichRange, RowIndex, FirstRow, 'Rich') : Riches);
         if (!Upd) get.DB!.getRange(get.NewRow, get.Cols.Checkbox + 1, Rows, get.Cols.Checkbox + 1).insertCheckboxes().check();
