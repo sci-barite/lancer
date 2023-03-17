@@ -60,7 +60,7 @@ function ContactsList(Contacts: ApolloContact[]) {
         const Jobs = Contact.Jobs? buildJobsString(Contact.Jobs, Contact.More).split('!')[1] : '';  // Maybe Sylph should do this instead.
         const Entry : DBContact = {
             ...get.Default,
-            ...Contact as ApolloContact,
+            ...Contact,
             Row: ExRow,
             Comment: `${ExRow ? '' : get.Default.NewMessage}${Jobs}${ExRow ? '\n'+get.Default.OldMessage : ''}`,
             Name_id: !Contact.Name_linkedin ? '' : Contact.Name_linkedin.split('/in/')[1].replace('/', ''),
