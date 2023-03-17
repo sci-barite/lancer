@@ -35,6 +35,7 @@ function Get(...args : string[]) : {[key: string]: any} {
             NewMessage: 'Imported via Sylph!', OldMessage: 'Updated via Sylph on '+Pack.Today, URL: 'https://app.apollo.io/',
         };
         Pack.DB = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('ContactsDB');
+        Pack.DB2 = SpreadsheetApp.openById(getFWDBLeads()).getSheetByName('Export');
         Pack.Names = Pack.DB.getRange('B:B').getValues().flat();
     }
     Pack.LastRow = Pack.DB ? Pack.DB.getLastRow() : null;
@@ -71,8 +72,8 @@ function ContactsList(Contacts: ApolloContact[]) {
     
     type RowContact = Omit<DBContact, 'Row'>;
     const writeRow = (DBContact: RowContact) => Object.keys(get.Cols).map((col) => DBContact[col as keyof RowContact] ?? '');
-    const updateRows = (Values: any[][], Range: GoogleAppsScript.Spreadsheet.Range, Index: number[], FirstRow: number, Rich?: string) =>
-        (Rich ? Range.getRichTextValues() : Range.getValues()).map((Cols, RowN) => {
+    const updateRows = (Values: any[][], Range: GoogleAppsScript.Spreadsheet.Range, Index: number[], FirstRow: number, Rich?: any[][]) =>
+        (Rich || Range.getValues()).map((Cols, RowN) => {
             const Row = Index.indexOf(FirstRow + RowN);
             if (Row === -1) return Cols;
             if (!Rich) Values[Row][get.Cols.Comment] = `${Cols[get.Cols.Comment]}\n${Values[Row][get.Cols.Comment]}`;  // Fastest way, I think.
@@ -83,25 +84,14 @@ function ContactsList(Contacts: ApolloContact[]) {
         // Setup phase. We want to know how much we have in terms of rows. For updates, we want everything from first row to last.
         const DataLength = Contacts.length
         if (!DataLength) return;
-        /*const RowIndex : number[] = [], Values : string[][] = [], Riches : GoogleAppsScript.Spreadsheet.RichTextValue[][] = [];
-        Contacts.forEach((Contact, Row) => {
-            RowIndex.push(Contact.Row);
-            Values.push(writeRow(Contact));
-            Riches.push(Values[Row].slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
-                RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
-                    .setText(Field as string).setLinkUrl(Contact[Link[RichCols.indexOf(Col)] as keyof DBContact] as string).build()
-                    : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
-                )
-            )
-        });*/
         const RowIndex = Upd ? Contacts.map(Contact => Contact.Row) : [];
         if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // To get the smallest value, and report nicely to Sylph.
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
 
         // Regular values. Here the main difficulty is updating: rows are found via indexOf on Rows, which has the same order as the source.
-        const Values = Contacts.map(Contact => writeRow(Contact)), Columns = Values[0].length;
-        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);                               // So we never miss with getRange, below.
-        const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Columns);     // Avoiding magic numbers as much as possible.
+        const Values = Contacts.map(Contact => writeRow(Contact));
+        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);                                   // So we never miss with getRange, below.
+        const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Values[0].length);
         
         // RichText values. We build them all first, then pick if updating. Link in Comment was moved to Title to reduce to a single range.
         const Riches = Values.map((Cols, Row) => 
@@ -111,10 +101,10 @@ function ContactsList(Contacts: ApolloContact[]) {
                     : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
             )
         );
-        const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company);
-
+        const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company), OldRiches = RichRange.getRichTextValues();
+        // ⚠️ Extremely important to record the OldRiches and pass it to the updateRows function. Otherwise it will delete all links.
         ValueRange.setValues(Upd ? updateRows(Values, ValueRange, RowIndex, FirstRow) : Values);
-        RichRange.setRichTextValues(Upd ? updateRows(Riches, RichRange, RowIndex, FirstRow, 'Rich') : Riches);
+        RichRange.setRichTextValues(Upd ? updateRows(Riches, RichRange, RowIndex, FirstRow, OldRiches) : Riches);
         if (!Upd) get.DB!.getRange(get.NewRow, get.Cols.Checkbox + 1, Rows, get.Cols.Checkbox + 1).insertCheckboxes().check();
     });
 
