@@ -72,20 +72,27 @@ function ContactsList(Contacts: ApolloContact[]) {
     
     type RowContact = Omit<DBContact, 'Row'>;
     const writeRow = (DBContact: RowContact) => Object.keys(get.Cols).map((col) => DBContact[col as keyof RowContact] ?? '');
-    const updateRows = (Values: any[][], Range: GoogleAppsScript.Spreadsheet.Range, Index: number[], FirstRow: number, Rich?: any[][]) =>
-        (Rich || Range.getValues()).map((Cols, RowN) => {
-            const Row = Index.indexOf(FirstRow + RowN);
+    const updateRows = (Incoming: any[][], FirstRow: number, RowIndex: number[], ToUpdate: any[][], Rich?: string) => {
+        /*(Rich || Range.getValues()).map((Cols, RowN) => {
+            const Row = UpdRows.indexOf(FirstRow + RowN);
             if (Row === -1) return Cols;
             if (!Rich) Values[Row][get.Cols.Comment] = `${Cols[get.Cols.Comment]}\n${Values[Row][get.Cols.Comment]}`;  // Fastest way, I think.
             return Values[Row];
+        });*/
+        RowIndex.forEach((Row, Entry) => {
+            const Indexed = Row - FirstRow;
+            if (!Rich) Incoming[Entry][get.Cols.Comment] = `${ToUpdate[Indexed][get.Cols.Comment]}\n${Incoming[Entry][get.Cols.Comment]}`;
+            ToUpdate[Indexed] = Incoming[Entry];
         });
+        return ToUpdate;
+    }
 
     [NewContacts, UpdContacts].forEach((Contacts, Upd) => {
         // Setup phase. We want to know how much we have in terms of rows. For updates, we want everything from first row to last.
         const DataLength = Contacts.length
         if (!DataLength) return;
-        const RowIndex = Upd ? Contacts.map(Contact => Contact.Row) : [];
-        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // To get the smallest value, and report nicely to Sylph.
+        const RowIndex = Contacts.map(Contact => Contact.Row)
+        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // Performance and nice reprting, all in one.
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
 
         // Regular values. Here the main difficulty is updating: rows are found via indexOf on Rows, which has the same order as the source.
@@ -101,10 +108,11 @@ function ContactsList(Contacts: ApolloContact[]) {
                     : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
             )
         );
-        const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company), OldRiches = RichRange.getRichTextValues();
+        const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company)
+        const [OldValues, OldRiches] = Upd ? [ValueRange.getValues(), RichRange.getRichTextValues()] : [[], []];
         // ⚠️ Extremely important to record the OldRiches and pass it to the updateRows function. Otherwise it will delete all links.
-        ValueRange.setValues(Upd ? updateRows(Values, ValueRange, RowIndex, FirstRow) : Values);
-        RichRange.setRichTextValues(Upd ? updateRows(Riches, RichRange, RowIndex, FirstRow, OldRiches) : Riches);
+        ValueRange.setValues(Upd ? updateRows(Values, FirstRow, RowIndex, OldValues) : Values);
+        RichRange.setRichTextValues(Upd ? updateRows(Riches, FirstRow, RowIndex, OldRiches, 'Rich') : Riches);
         if (!Upd) get.DB!.getRange(get.NewRow, get.Cols.Checkbox + 1, Rows, get.Cols.Checkbox + 1).insertCheckboxes().check();
     });
 
