@@ -15,7 +15,6 @@ type ApolloContact = {
   };
 
 type DBContact = Partial<ApolloContact> & {
-    Row: number,
     Comment: string,
     Name_id: string,
     Company_id: string,
@@ -53,7 +52,7 @@ function ContactsList(Contacts: ApolloContact[]) {
     if (!get.DB) return;
     const [NewContacts, UpdContacts] : DBContact[][] = [[], []];
     const [RichCols, Link] = [[0, 3, 5], ['Name_linkedin', 'Apollo_link', 'Company_linkedin']]
-    const UpdRows : number[] = [];
+    const UpdRows : number[] = [], RowIndex : number[] = [];
 
     Contacts.forEach(Contact => {
         const ExRow = get.Names.findIndex((name: string) => name == Contact.Name) + 1;  // Might be better to use uniqueIDs at some point.
@@ -61,46 +60,39 @@ function ContactsList(Contacts: ApolloContact[]) {
         const Entry : DBContact = {
             ...get.Default,
             ...Contact,
-            Row: ExRow,
             Comment: `${ExRow ? '' : get.Default.NewMessage}${Jobs}${ExRow ? '\n'+get.Default.OldMessage : ''}`,
             Name_id: !Contact.Name_linkedin ? '' : Contact.Name_linkedin.split('/in/')[1].replace('/', ''),
             Company_id: !Contact.Company_linkedin ? '' : Contact.Company_linkedin.split('/company/')[1].replace('/', ''),
             Apollo_link: `${Contact.Name_apollo.startsWith('#') ? get.Default.URL : ''}${Contact.Name_apollo}`
         };
-        Entry.Row ? UpdContacts.push(Entry) : NewContacts.push(Entry);
+        ExRow ? (RowIndex.push(ExRow), UpdContacts.push(Entry)) : NewContacts.push(Entry);
     });
     
     type RowContact = Omit<DBContact, 'Row'>;
     const writeRow = (DBContact: RowContact) => Object.keys(get.Cols).map((col) => DBContact[col as keyof RowContact] ?? '');
-    const updateRows = (Incoming: any[][], FirstRow: number, RowIndex: number[], ToUpdate: any[][], Rich?: string) => {
-        /*(Rich || Range.getValues()).map((Cols, RowN) => {
-            const Row = UpdRows.indexOf(FirstRow + RowN);
-            if (Row === -1) return Cols;
-            if (!Rich) Values[Row][get.Cols.Comment] = `${Cols[get.Cols.Comment]}\n${Values[Row][get.Cols.Comment]}`;  // Fastest way, I think.
-            return Values[Row];
-        });*/
+    const updateRows = (Incoming: any[][], FirstRow: number, RowIndex: number[], Updated: any[][], Rich?: string) => {
         RowIndex.forEach((Row, Entry) => {
             const Indexed = Row - FirstRow;
-            if (!Rich) Incoming[Entry][get.Cols.Comment] = `${ToUpdate[Indexed][get.Cols.Comment]}\n${Incoming[Entry][get.Cols.Comment]}`;
-            ToUpdate[Indexed] = Incoming[Entry];
+            if (!Rich)
+                Incoming[Entry][get.Cols.Comment] = `${Updated[Indexed][get.Cols.Comment]}\n${Incoming[Entry][get.Cols.Comment]}`;
+            Updated[Indexed] = Incoming[Entry];
         });
-        return ToUpdate;
-    }
+        return Updated;
+    };
 
     [NewContacts, UpdContacts].forEach((Contacts, Upd) => {
         // Setup phase. We want to know how much we have in terms of rows. For updates, we want everything from first row to last.
         const DataLength = Contacts.length
         if (!DataLength) return;
-        const RowIndex = Contacts.map(Contact => Contact.Row)
-        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // Performance and nice reprting, all in one.
+        if (Upd) UpdRows.push(...RowIndex.sort((a, b) => a - b));   // Logic and ordered reporting, all rolled into a nice spicy burrito!
         const FirstRow = Upd ? UpdRows[0] : get.NewRow, Rows = Upd ? (UpdRows[UpdRows.length - 1] - FirstRow) + 1 : DataLength;
 
-        // Regular values. Here the main difficulty is updating: rows are found via indexOf on Rows, which has the same order as the source.
+        // Regular values. Here we just convert the object into raw data that sheet.setValues() can use, and set the range accordingly.
         const Values = Contacts.map(Contact => writeRow(Contact));
-        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);                                   // So we never miss with getRange, below.
+        if (!Upd) get.DB.insertRowsAfter(get.NewRow, DataLength);
         const ValueRange = get.DB.getRange(FirstRow, get.Cols.Checkbox + 1, Rows, Values[0].length);
         
-        // RichText values. We build them all first, then pick if updating. Link in Comment was moved to Title to reduce to a single range.
+        // RichText values. We need them even for non-links in-between links. Link in Comment was moved to Title to have a single range.
         const Riches = Values.map((Cols, Row) => 
             Cols.slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
                 RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
