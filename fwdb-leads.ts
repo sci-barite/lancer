@@ -54,7 +54,7 @@ function LeadsUpdate(Get: any, DB: GoogleAppsScript.Spreadsheet.Sheet, RowN: num
         Update += ' - Job status changed from '+Row[1]+' to X.Closed.\n';
         StatusField.setValue('X.Closed');
     }
-    else if (Status.includes('not reach') || Status == '0.New') {
+    else if (Status.startsWith('?.') || Status == '0.New') {
         Update += ' - Job status changed from '+Row[1]+' to 0.Open.\n';
         StatusField.setValue('0.Open');
     }
