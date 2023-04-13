@@ -96,8 +96,8 @@ function ContactsList(Contacts: ApolloContact[]) {
         const Riches = Values.map((Cols, Row) => 
             Cols.slice(get.Cols.Name, get.Cols.Company + 1).map((Field, Col) => 
                 RichCols.includes(Col) ? SpreadsheetApp.newRichTextValue()
-                    .setText(Field as string).setLinkUrl(Contacts[Row][Link[RichCols.indexOf(Col)] as keyof DBContact] as string).build()
-                    : SpreadsheetApp.newRichTextValue().setText(Field as string).build()
+                    .setText(Field).setLinkUrl(Contacts[Row][Link[RichCols.indexOf(Col)] as keyof DBContact]!).build()
+                    : SpreadsheetApp.newRichTextValue().setText(Field).build()
             )
         );
         const RichRange = get.DB.getRange(FirstRow, get.Cols.Name + 1, Rows, get.Cols.Company)
