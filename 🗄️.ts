@@ -3,10 +3,8 @@
 const Index = (() => {
     const _columns: Map<string, {[key: string]: string | string[]}> = new Map();
     const _sheets: Set<string> = new Set();
-    let _id: string;
-    let _SS: GoogleAppsScript.Spreadsheet.Spreadsheet;
-    let _propPrefix: string;
-    let _props: GoogleAppsScript.Properties.Properties;
+    let _SS: GoogleAppsScript.Spreadsheet.Spreadsheet, _props: GoogleAppsScript.Properties.Properties;
+    let _id: string, _propPrefix: string;
     let _info: {[key: string]: string};
 
     class ColumnIndex {
@@ -55,11 +53,7 @@ const Index = (() => {
                     const routes = column.split('.');
                     const [colName, colA1] = [routes.at(-2), routes.at(-1)];
                     if (!colName || !colA1) return;
-                    _columns.set(sheet + colName, {
-                        colName: colName,
-                        colA1: colA1,
-                        index: JSON.parse(props.getProperty(column) as string) as string[]
-                    });
+                    _columns.set(sheet + colName, { colName: colName, colA1: colA1, index: JSON.parse(props.getProperty(column)!) });
                     this.of[sheet][colName] = new ColumnIndex(sheet, colName, colA1);
                 });
             }
