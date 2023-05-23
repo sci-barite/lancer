@@ -1,5 +1,4 @@
-// TEST
-
+// Spreadsheet.Sheet.Column index abstraction layer
 const Index = (() => {
     const _columns: Map<string, {[key: string]: string | string[]}> = new Map();
     const _sheets: Set<string> = new Set();
