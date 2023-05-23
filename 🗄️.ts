@@ -19,20 +19,14 @@ const Index = (() => {
             this.colA1 = colA1;
             this.sheet = sheet;
         }
-        public get() {
-            const colIndex = _columns.get(this.sheet + this.colName);
-            if (!colIndex) return null;
-            return colIndex.index;
-        }
-        public A1() {
-            return this.colA1;
-        }
-        public spreadsheet() {
-            return _SS.getName();
-        }
+        public get = () => _columns.get(this.sheet + this.colName)?.index
+        public A1 = () => this.colA1;
+        public spreadsheet = () => _SS.getName();
     }
     class Index {
+        // This becomes an object model of the Index structure for each Spreadsheet
         public readonly of: {[key: string]: {[key: string]: ColumnIndex}} = {};
+
         constructor(spreadID: string, props: GoogleAppsScript.Properties.Properties) {
             _id = spreadID;
             _SS = SpreadsheetApp.openById(_id);
@@ -41,17 +35,22 @@ const Index = (() => {
             _info = {};
             const storedInfo = _propPrefix + '.info';
             const indexes = Object.keys(props.getProperties()).filter(prop => prop.startsWith(_propPrefix));
+            indexes.forEach(index => _sheets.add(index.split('.')[1]));
+
             if (indexes.includes(storedInfo)) {
                 _info = JSON.parse(props.getProperty(storedInfo) as string);
                 indexes.splice(indexes.indexOf(storedInfo), 1);
             }
-            indexes.forEach(index => {
-                const sheet = index.split('.')[1];
-                _sheets.add(sheet);
-            });
+            else {
+                _info = { prefix: _propPrefix, id: _id };
+                _props.setProperty(storedInfo, JSON.stringify(_info));
+            }
+            if (_info.prefix !== _propPrefix) console.warn('Index mismatch!', _info.prefix, _propPrefix);
+            
+            // Builds the object model
             for (const sheet of _sheets) {
-                const columns = indexes.filter(prop => prop.startsWith(`${_propPrefix}.${sheet}`));
                 this.of[sheet] = {};
+                const columns = indexes.filter(prop => prop.startsWith(`${_propPrefix}.${sheet}`));
                 columns.forEach(column => {
                     const routes = column.split('.');
                     const [colName, colA1] = [routes.at(-2), routes.at(-1)];
@@ -64,21 +63,10 @@ const Index = (() => {
                     this.of[sheet][colName] = new ColumnIndex(sheet, colName, colA1);
                 });
             }
-            if (!_info.id) {
-                _info = { prefix: _propPrefix, id: _id };
-                _props.setProperty(storedInfo, JSON.stringify(_info));
-            }
-            else if (_info.prefix !== _propPrefix) console.warn('Prefix mismatch!', _info.prefix, _propPrefix);
         }
-        public getInfo() {
-            return _info;
-        }
-        public getSheets() {
-            return Array.from(_sheets);
-        }
-        public getColumns(sheet: string) {
-            return Object.keys(this.of[sheet]);
-        }
+        public getInfo = () => _info;
+        public getSheets = () => Array.from(_sheets);
+        public getColumns = (sheet: string) => Object.keys(this.of[sheet]);
     }
     return Index;
 })();
