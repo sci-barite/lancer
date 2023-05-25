@@ -69,7 +69,7 @@ const Index = (() => {
         }
         public getInfo = () => ({...info});
         public getKeys = () => params.stores.getKeys().filter(key => key.startsWith(params.prefix as string));
-        public setInfo = (passedInfo: Partial<IndexInfo>) => info = {...info, ...passedInfo};
+        public setInfo = (newInfo: Partial<IndexInfo>) => info = {...info, ...newInfo};
         public getSheets = () => Array.from(sheets);
         public writeCols = () => colMap.forEach((cols, sheet) => cols.forEach(col => object[sheet][col].setProps()));
         public indexCols = () => colMap.forEach((cols, sheet) => cols.forEach(col => object[sheet][col].indexCol()));
