@@ -49,8 +49,8 @@ const Index = (() => {
 
     class Index {
         constructor(SS: GoogleAppsScript.Spreadsheet.Spreadsheet, stores?: GoogleAppsScript.Properties.Properties, prefix?: string) {
-            const ssName = SS.getName()
-            if (!ssName) throw new Error(`⛔ Invalid Spreadsheet. Querying for Spreadsheet ID: ${SS.getId() as string}`)
+            const ssName = SS.getName();
+            if (!ssName) throw new Error(`⛔ Invalid Spreadsheet. Querying for Spreadsheet ID: ${SS.getId() as string}`);
 
             stores = stores ?? PropertiesService.getScriptProperties();
             prefix = prefix ?? labels(ssName);
