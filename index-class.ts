@@ -69,7 +69,8 @@ const Index = (() => {
                 sheets.add(sheet);
             }
             for (const sheet of sheets) {
-                const columns = Array.from(new Set(storedKeys.filter(key => key.startsWith(`${prefix}.${sheet}`)).map(key => key.split('.')[colAddress])));
+                const columns = Array
+                    .from(new Set(storedKeys.filter(key => key.startsWith(`${prefix}.${sheet}`)).map(key => key.split('.')[colAddress])));
                 colMap.set(sheet, columns);
                 for (const column of columns) object[sheet][column] = new ColumnIndex(`${prefix}.${sheet}.${column}`);
             }
@@ -87,10 +88,12 @@ const Index = (() => {
         }
         public addNewCol = (colInfo: ColumnInfo, colName?: string) => {
             const {A1, sheetName} = colInfo, sheet = params.SS.getSheetByName(sheetName);
-            if (!sheet) return `⛔ Found no sheet named "${sheetName}" in Spreadsheet "${params.SS.getName()}".`;
+            if (!sheet) 
+                return `⛔ Found no sheet named "${sheetName}" in Spreadsheet "${params.SS.getName()}".`;
             if (!colName) colName = labels(sheet.getRange(A1.charAt(0) + 1).getValue());
             const existing = colMap.get(sheetName);
-            if (existing && existing.includes(colName)) return `⛔ Existing index for "${colName}". Use .getObjMod().${sheetName}.${colName} to access it.`;
+            if (existing && existing.includes(colName)) 
+                return `⛔ Existing index for "${colName}". Use .getObjMod().${sheetName}.${colName} to access it.`;
             const colObject = new ColumnIndex(`${params.prefix}.${sheetName}.${colName}`, colInfo);
             object[sheetName][colName] = colObject;
             existing ? colMap.set(sheetName, existing.concat(colName)) : colMap.set(sheetName, [colName]);
