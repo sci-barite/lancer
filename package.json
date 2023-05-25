@@ -1,6 +1,6 @@
 {
   "name": "lancer",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Lancer GETs data from the Sylph Chrome Extension and puts it on Google Sheets. It also manages indexes/doubles for both.",
   "main": "Code.js",
   "dependencies": {
