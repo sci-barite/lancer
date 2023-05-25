@@ -110,5 +110,5 @@ function indexTests() {
     Props.setProperty('FWDBLeads.LeadsDB.Jobs', JSON.stringify(ColInfo));
     const index = new Index(SS, Props);
     const FWDB = index.getObjMod();
-    console.log('Indexing of Jobs result:', FWDB.LeadsDB.Jobs.readProp());
+    console.log('Jobs index:', FWDB.LeadsDB.Jobs.readProp());
 }

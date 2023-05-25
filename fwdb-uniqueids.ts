@@ -160,11 +160,10 @@ function genericIndex(linkColumn: GoogleAppsScript.Spreadsheet.RichTextValue[]) 
     const UnIDs = new Map(IDMap);   // Uniques only, the fastest way.
     const Count = new Map(), CountDown = (row : number) => Count.set(IDMap[row][ID], Count.get(IDMap[row][ID]) - 1);
     const Doubs: string[] = [], DoubPush = (row : number) => Doubs.push(`${row + 2}: ${IDMap[row][title]}`);
-
     IDMap.forEach(row => Count.set(row[ID], (Count.get(row[ID]) || 0) + 1));  // Counts occurrences, the fastest way.
-
-    for (let row: number = IDMap.length - 1; row >= 0; row--) IDMap[row][ID] && (Count.get(IDMap[row][ID]) > 1) ? 
-        (DoubPush(row), CountDown(row)) : CountDown(row);
-
+    for (let row: number = IDMap.length - 1; row >= 0; row--) 
+        IDMap[row][ID] && (Count.get(IDMap[row][ID]) > 1) ? 
+            (DoubPush(row), CountDown(row)) : 
+            CountDown(row);
     return {Unique: Array.from(UnIDs), Double: Doubs};
 }
