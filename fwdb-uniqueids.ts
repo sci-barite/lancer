@@ -151,19 +151,3 @@ function dbFy(update : boolean = false, sheetName? : string) {
 
     tickerUpdate('verbose');
 }
-
-// FAST Indexing and double counting function: 1 and a half seconds for 700+ RichTextValue links!
-function genericIndex(linkColumn: GoogleAppsScript.Spreadsheet.RichTextValue[]) {
-    const Links = linkColumn.map(link => [link.getLinkUrl(), link.getText()]), [ID, title] = [0, 1];
-    const PopLi = (url: string | null, row: number) => (url?.split('/').pop() || url?.split('/').at(-2) || `BAD: ${row + 2}`);
-    const IDMap = Links.map((link, row) => [(link[ID] ? PopLi(link[ID], row) : `BAD-NULL: ${row + 2}`), link[title]] as const);
-    const UnIDs = new Map(IDMap);   // Uniques only, the fastest way.
-    const Count = new Map(), CountDown = (row : number) => Count.set(IDMap[row][ID], Count.get(IDMap[row][ID]) - 1);
-    const Doubs: string[] = [], DoubPush = (row : number) => Doubs.push(`${row + 2}: ${IDMap[row][title]}`);
-    IDMap.forEach(row => Count.set(row[ID], (Count.get(row[ID]) || 0) + 1));  // Counts occurrences, the fastest way.
-    for (let row: number = IDMap.length - 1; row >= 0; row--) 
-        IDMap[row][ID] && (Count.get(IDMap[row][ID]) > 1) ? 
-            (DoubPush(row), CountDown(row)) : 
-            CountDown(row);
-    return {Unique: Array.from(UnIDs), Double: Doubs};
-}
