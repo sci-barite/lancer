@@ -1,16 +1,17 @@
-type IndexObject = {unique: string[] | [string, string | null][], double?: string[], bad?: [string, string | null][]};
-type ColumnInfo =  {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
+type IndexProps = {unique: string[] | [string, string | null][], double?: string[], bad?: [string, string | null][]};
+type ColumnInfo = {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
 type IndexInfo = {name: string, spreadsheet: string, stores?: number};
 
 const Index = (() => {
     const [sheetAddress, colAddress] = [1, 2];
     const object : {[sheet: string]: {[column: string]: ColumnIndex}} = {};
-    const caches : WeakMap<ColumnIndex, IndexObject> = new WeakMap();
+    const caches : WeakMap<ColumnIndex, IndexProps> = new WeakMap();
     const colMap : Map<string, string[]> = new Map();
     const sheets : Set<string> = new Set();
     const labels = (originalName: string) => originalName.trim().replace(':', '').split(' ').slice(0, 2).join('');
     let params : {SS: GoogleAppsScript.Spreadsheet.Spreadsheet, stores: GoogleAppsScript.Properties.Properties, prefix: string};
     let info : IndexInfo;
+    let keys : string[];
 
     class ColumnIndex {
         #key: string;
@@ -22,8 +23,8 @@ const Index = (() => {
             return this;
         }
         public getCache = () => caches.get(this);
-        public readProp = () => JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexObject;
-        public getProps = () => caches.set(this, JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexObject);
+        public readProp = () => JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexProps;
+        public getProps = () => caches.set(this, JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexProps);
         public setProps = () => {
             const cached = caches.get(this);
             if (!cached) return false;
@@ -36,56 +37,62 @@ const Index = (() => {
             const range = sheet.getRange(this.#info.A1 + '2:' + this.#info.A1 + sheet.getLastRow());
             const links = range.getRichTextValues().flat() as GoogleAppsScript.Spreadsheet.RichTextValue[];
             const index = genericIndex(links);
-            const model = { unique: this.#info.short ? index.Unique.map(tuple => tuple[0]) : index.Unique } as IndexObject;
-            if (this.#info.doubles) model.double = index.Double;
-            if (this.#info.bad) model.bad = index.Unique.filter(tuple => tuple[0].startsWith('BAD'));
-            caches.set(this, model);
+            const props = { unique: this.#info.short ? index.Unique.map(tuple => tuple[0]) : index.Unique } as IndexProps;
+            if (this.#info.bad) props.bad = index.Unique.filter(tuple => tuple[0].startsWith('BAD'));
+            if (this.#info.doubles) props.double = index.Double;
+            caches.set(this, props);
             return this;
         }
         public getInfo = () => ({...this.#info});
         public setInfo = (params: Partial<ColumnInfo>) => this.#info = {...this.#info, ...params} as ColumnInfo;
-
     }
 
     class Index {
         constructor(SS: GoogleAppsScript.Spreadsheet.Spreadsheet, stores?: GoogleAppsScript.Properties.Properties, prefix?: string) {
-            const ssName = SS.getName();
-            if (!ssName) throw new Error(`⛔ Invalid Spreadsheet. Querying for Spreadsheet ID: ${SS.getId() as string}`);
-
-            stores = stores ?? PropertiesService.getScriptProperties();
-            prefix = prefix ?? labels(ssName);
-            params = { SS, stores, prefix };
-            console.warn(params.SS.getName(), stores.getKeys(), prefix);
-            
-            const storedKeys = stores.getKeys().filter(key => key.startsWith(prefix as string));
-            const storedInfo = stores.getProperty(prefix + '.info');
-            if (storedInfo) info = JSON.parse(storedInfo), storedKeys.splice(storedKeys.indexOf(prefix + '.info'), 1);
-            else info = {name: prefix, spreadsheet: ssName, stores: storedKeys.length};
-            console.log(info);
-
-            for (const key of storedKeys) {
-                const sheet = key.split('.')[sheetAddress];
-                object[sheet] = {};
-                sheets.add(sheet);
-            }
-            for (const sheet of sheets) {
-                const columns = Array
-                    .from(new Set(storedKeys.filter(key => key.startsWith(`${prefix}.${sheet}`)).map(key => key.split('.')[colAddress])));
-                colMap.set(sheet, columns);
-                for (const column of columns) object[sheet][column] = new ColumnIndex(`${prefix}.${sheet}.${column}`);
-            }
-            console.log(JSON.stringify(object, undefined, 1));
+            this.setParams({SS: SS, stores: stores, prefix: prefix})
+            console.warn(params.SS.getName(), params.stores.getKeys(), prefix);
+            keys = this.getKeys();
+            this.initClass();
         }
-        public getInfo = () => info;
+        private initClass = () => {
+            const storedInfo = params.stores.getProperty(params.prefix + '.info');
+            if (storedInfo) info = JSON.parse(storedInfo), keys.splice(keys.indexOf(params.prefix + '.info'), 1);
+            else info = {name: params.prefix, spreadsheet: params.SS.getId(), stores: keys.length};
+            console.log(info);
+        }
+        private setParams = (args: Partial<typeof params>) => {
+            const ssName = args.SS!.getName();
+            if (!ssName) throw new Error(`⛔ Invalid Spreadsheet. Querying for Spreadsheet ID: ${args.SS!.getId() as string}`);
+            args.stores = args.stores ?? PropertiesService.getScriptProperties();
+            args.prefix = args.prefix ?? labels(ssName);
+            params = {...args} as typeof params;
+        }
+        public getInfo = () => ({...info});
+        public getKeys = () => params.stores.getKeys().filter(key => key.startsWith(params.prefix as string));
         public setInfo = (passedInfo: Partial<IndexInfo>) => info = {...info, ...passedInfo};
         public getSheets = () => Array.from(sheets);
-        public getObjMod = () => ({...object});
         public writeCols = () => colMap.forEach((cols, sheet) => cols.forEach(col => object[sheet][col].setProps()));
         public indexCols = () => colMap.forEach((cols, sheet) => cols.forEach(col => object[sheet][col].indexCol()));
         public writeInfo = () => { 
             info.stores = params.stores.getKeys().filter(key => key.startsWith(params.prefix)).length - 1;
             params.stores.setProperty(params.prefix + '.info', JSON.stringify(info));
         }
+        public getObjMod = () => {
+            keys = this.getKeys();
+            for (const key of keys) {
+                const sheet = key.split('.')[sheetAddress];
+                object[sheet] = {};
+                sheets.add(sheet);
+            }
+            for (const sheet of sheets) {
+                const columns = Array
+                    .from(new Set(keys.filter(key => key.startsWith(`${params.prefix}.${sheet}`)).map(key => key.split('.')[colAddress])));
+                colMap.set(sheet, columns);
+                for (const column of columns) object[sheet][column] = new ColumnIndex(`${params.prefix}.${sheet}.${column}`);
+            }
+            console.log(JSON.stringify(object, undefined, 1));
+            return {...object}
+        };
         public addNewCol = (colInfo: ColumnInfo, colName?: string) => {
             const {A1, sheetName} = colInfo, sheet = params.SS.getSheetByName(sheetName);
             if (!sheet) 
