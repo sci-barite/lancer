@@ -100,11 +100,11 @@ const Index = (() => {
             if (!colName) colName = labels(sheet.getRange(A1.charAt(0) + 1).getValue());
             const existing = colMap.get(sheetName);
             if (existing && existing.includes(colName)) 
-                return `⛔ Existing index for "${colName}". Use .getObjMod().${sheetName}.${colName} to access it.`;
+                return `⛔ Existing index for "${colName}". Use .getObjMod().${sheetName}.${colName} to get it.`;
             const colObject = new ColumnIndex(`${params.prefix}.${sheetName}.${colName}`, colInfo);
             object[sheetName][colName] = colObject;
             existing ? colMap.set(sheetName, existing.concat(colName)) : colMap.set(sheetName, [colName]);
-            console.log(`✅ Added index for "${colName}". Use .getObjMod().${sheetName}.${colName} to access it.`);
+            console.log(`✅ Added index for "${colName}". Use .getObjMod().${sheetName}.${colName} to get it.`);
             return colObject;
         }
     }
