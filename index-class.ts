@@ -1,4 +1,4 @@
-type IndexProps = {unique: string[] | [string, string | null][], double?: string[], bad?: [string, string | null][]};
+type IndexProps = {short: string[], long: [string, string | null][], double?: string[], bad?: [string, string | null][]};
 type ColumnInfo = {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
 type IndexInfo = {name: string, spreadsheet: string, stores?: number};
 
@@ -40,7 +40,10 @@ const Index = (() => {
             const range = sheet.getRange(this.#info.A1 + '2:' + this.#info.A1 + sheet.getLastRow());
             const links = range.getRichTextValues().flat() as GoogleAppsScript.Spreadsheet.RichTextValue[];
             const index = genericIndex(links);
-            const props = { unique: this.#info.short ? index.Unique.map(tuple => tuple[0]) : index.Unique } as IndexProps;
+            const props = {
+                short: this.#info.short ? index.Unique.map(tuple => tuple[0]) : [],
+                long: this.#info.short ? [] : index.Unique
+            } as IndexProps;
             if (this.#info.bad) props.bad = index.Unique.filter(tuple => tuple[0].startsWith('BAD'));
             if (this.#info.doubles) props.double = index.Double;
             caches.set(this, props);
@@ -49,24 +52,35 @@ const Index = (() => {
         public deleteId = (type: 'unique' | 'double', id: string) => {
             const cache = caches.get(this);
             if (!cache) return false;
-            const found = type === 'unique' ? cache.unique.findIndex(elem => elem === id) : cache.double?.findIndex(elem => elem === id) as number;
+            const found = type === 'unique'
+                ? (this.#info.short ? cache.short.findIndex(elem => elem === id) : cache.long.findIndex(elem => elem[0] === id)) 
+                : cache.double?.findIndex(elem => elem === id) as number;
             if (found === -1) return false;
-            type === 'unique' ? cache.unique.splice(found, 1) : cache.double?.splice(found, 1);
+            type === 'unique'
+                ? (this.#info.short ? cache.short.splice(found, 1) : cache.long.splice(found, 1))
+                : cache.double?.splice(found, 1);
             caches.set(this, cache);
             return true;
         }
-        public addElems = (short: boolean, ...elems: string[] | [string, string | null][]) => {
-            const cache = caches.get(this);
-            if (!cache) return false;
-            if (short !== this.#info.short) return false;
-            const updatedIndex = short
-                ? [...(cache.unique as string[]), ...(elems as string[]).filter(elem => typeof elem === "string")]
-                : [...(cache.unique as [string, string | null][]), ...(elems as [string, string | null][]).filter(elem => Array.isArray(elem))];
-            const updatedUnique = short
-                ? Array.from(new Set(updatedIndex as string[]))
-                : Array.from(new Map(updatedIndex as [string, string | null][]));
-            caches.set(this, { ...cache, ...{ unique: updatedUnique } });
-            return true;
+        public addElems = (args: {short?: string[], long?: [string, string | null][]}) => {
+            const cache = caches.get(this), short = this.#info.short;
+            if (!cache) return [];
+            const [unique, double] : string[][] | [string, string | null][][] = [[], []];
+            short
+                ? args.short?.forEach(elem => cache.short.findIndex(id => id === elem) === -1
+                    ? (unique as string[]).push(elem as string)
+                    : (double as string[]).push(elem as string))
+                : args.long?.forEach(elem => cache.long.findIndex(id => id[0] === elem[0]) === -1
+                    ? (unique as [string, string | null][]).push(elem as [string, string | null]) 
+                    : (double as [string, string | null][]).push(elem as [string, string | null]));
+            const updated = short
+                ? { short: [...cache.short, ...unique] } as IndexProps
+                : { long: [...cache.long, ...unique] } as IndexProps;
+            if (this.#info.doubles && double.length) short
+                ? updated.double = [... (cache.double ?? []), ...double as string[]]
+                : updated.double = [... (cache.double ?? []), ...double.map(elem => elem[0])];
+            caches.set(this, { ...cache, ...updated });
+            return unique;
         }
         public getInfo = () => ({...this.#info});
         public setInfo = (params: Partial<ColumnInfo>) => {
@@ -141,7 +155,11 @@ function indexTests() {
     const index = new Index(SS, Props);
     const FWDB = index.getObjMod();
     console.log('Jobs index:', FWDB.LeadsDB.Jobs.readProp());
-    console.log('Info object:', FWDB.info)
+    console.log('Main info:', index.getInfo());
+    console.log('Jobs info:', FWDB.LeadsDB.Jobs.getInfo());
+    console.log(FWDB.LeadsDB.Jobs.addElems({short: ['test', 'test2', 'test2']}).toString());
+    const newIndex = (FWDB.LeadsDB.Jobs.getCache()?.short as string[]).slice(-10);
+    console.log(newIndex);
 }
 
 // FAST Indexing and double counting function: 1 and a half seconds for 700+ RichTextValue links!
