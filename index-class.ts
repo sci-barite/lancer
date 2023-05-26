@@ -56,31 +56,30 @@ const Index = (() => {
                 ? (this.#info.short ? cache.short.findIndex(elem => elem === id) : cache.long.findIndex(elem => elem[0] === id)) 
                 : cache.double?.findIndex(elem => elem === id) as number;
             if (found === -1) return false;
-            type === 'unique'
-                ? (this.#info.short ? cache.short.splice(found, 1) : cache.long.splice(found, 1))
-                : cache.double?.splice(found, 1);
+            type === 'unique' ? (this.#info.short ? cache.short.splice(found, 1) : cache.long.splice(found, 1)) : cache.double?.splice(found, 1);
             caches.set(this, cache);
             return true;
         }
         public addElems = (args: {short?: string[], long?: [string, string | null][]}) => {
             const cache = caches.get(this), short = this.#info.short;
-            if (!cache) return [];
-            const [unique, double] : string[][] | [string, string | null][][] = [[], []];
-            short
-                ? args.short?.forEach(elem => cache.short.findIndex(id => id === elem) === -1
-                    ? (unique as string[]).push(elem as string)
-                    : (double as string[]).push(elem as string))
-                : args.long?.forEach(elem => cache.long.findIndex(id => id[0] === elem[0]) === -1
-                    ? (unique as [string, string | null][]).push(elem as [string, string | null]) 
-                    : (double as [string, string | null][]).push(elem as [string, string | null]));
-            const updated = short
-                ? { short: [...cache.short, ...unique] } as IndexProps
-                : { long: [...cache.long, ...unique] } as IndexProps;
-            if (this.#info.doubles && double.length) short
-                ? updated.double = [... (cache.double ?? []), ...double as string[]]
-                : updated.double = [... (cache.double ?? []), ...double.map(elem => elem[0])];
-            caches.set(this, { ...cache, ...updated });
-            return unique;
+            if (!cache || (short && !args.short?.length)) return [];
+            const results = args.short && short
+                ? this.shortIndex(cache, ...args.short) 
+                : (args.long && !short ? this.longIndex(cache, ...args.long) : {});
+            const updated = this.#info.doubles ? 
+                results : (short ? {short: results.short} : {long: results.double});
+            caches.set(this, { ...cache, ...updated as Partial<IndexProps> });
+            return short ? results.short?.slice(-args.short!.length) : results.long;
+        }
+        private shortIndex = (cache: IndexProps, ...elems : string[]): Partial<IndexProps> => {
+            elems.forEach(elem => cache.short.findIndex(id => id === elem) === -1 ? 
+                cache.short.push(elem) : cache.double?.push(elem));
+            return {short: [...cache.short], double: cache.double ? [...cache.double] : []};
+        }
+        private longIndex = (cache: IndexProps, ...elems : [string, string | null][]): Partial<IndexProps> => {
+            elems.forEach(elem => cache.long.findIndex(id => id[0] === elem[0]) === -1 ? 
+                cache.long.push(elem) : cache.double?.push(elem[0]));
+            return {long: [...cache.long], double: cache.double ? [...cache.double] : []};
         }
         public getInfo = () => ({...this.#info});
         public setInfo = (params: Partial<ColumnInfo>) => {
@@ -154,12 +153,12 @@ function indexTests() {
     const SS = SpreadsheetApp.openById(getFWDBLeads());
     const index = new Index(SS, Props);
     const FWDB = index.getObjMod();
-    console.log('Jobs index:', FWDB.LeadsDB.Jobs.readProp());
+    console.log('Index Jobs:', FWDB.LeadsDB.Jobs.indexCol().getCache()?.short.length)
     console.log('Main info:', index.getInfo());
     console.log('Jobs info:', FWDB.LeadsDB.Jobs.getInfo());
-    console.log(FWDB.LeadsDB.Jobs.addElems({short: ['test', 'test2', 'test2']}).toString());
-    const newIndex = (FWDB.LeadsDB.Jobs.getCache()?.short as string[]).slice(-10);
-    console.log(newIndex);
+    console.log(FWDB.LeadsDB.Jobs.addElems({short: ['test', 'test2', 'test2']})!);
+    const newIndex = FWDB.LeadsDB.Jobs.getCache()?.short.slice(-10);
+    console.log(newIndex!);
 }
 
 // FAST Indexing and double counting function: 1 and a half seconds for 700+ RichTextValue links!
