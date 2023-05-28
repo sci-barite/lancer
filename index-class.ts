@@ -1,6 +1,6 @@
 type IndexProps = {short: string[], long: [string, string | null][], double?: string[], bad?: [string, string | null][]};
 type ColumnInfo = {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
-type IndexInfo = {name: string, spreadsheet: string, stores?: number};
+type SpreadInfo = {name: string, spreadsheet: string, stores?: number};
 
 const Index = (() => {
     const [sheetAddress, colAddress, excludedStoreTags] = [1, 2, ['.index', '.info']];
@@ -10,7 +10,7 @@ const Index = (() => {
     const sheets : Set<string> = new Set();
     const labels = (originalName: string) => originalName.trim().replace(':', '').split(' ').slice(0, 2).join('');
     let params : {SS: GoogleAppsScript.Spreadsheet.Spreadsheet, stores: GoogleAppsScript.Properties.Properties, prefix: string};
-    let info : IndexInfo;
+    let info : SpreadInfo;
     let keys : string[];
 
     class ColumnIndex {
@@ -72,13 +72,11 @@ const Index = (() => {
             return short ? results.short?.slice(-args.short!.length) : results.long;
         }
         private shortIndex = (cache: IndexProps, ...elems : string[]): Partial<IndexProps> => {
-            elems.forEach(elem => cache.short.findIndex(id => id === elem) === -1 ? 
-                cache.short.push(elem) : cache.double?.push(elem));
+            elems.forEach(elem => cache.short.findIndex(id => id === elem) === -1 ? cache.short.push(elem) : cache.double?.push(elem));
             return {short: [...cache.short], double: cache.double ? [...cache.double] : []};
         }
         private longIndex = (cache: IndexProps, ...elems : [string, string | null][]): Partial<IndexProps> => {
-            elems.forEach(elem => cache.long.findIndex(id => id[0] === elem[0]) === -1 ? 
-                cache.long.push(elem) : cache.double?.push(elem[0]));
+            elems.forEach(elem => cache.long.findIndex(id => id[0] === elem[0]) === -1 ? cache.long.push(elem) : cache.double?.push(elem[0]));
             return {long: [...cache.long], double: cache.double ? [...cache.double] : []};
         }
         public getInfo = () => ({...this.#info});
@@ -111,7 +109,7 @@ const Index = (() => {
         }
         public getInfo = () => ({...info});
         public getKeys = () => params.stores.getKeys().filter(this.isStore);
-        public setInfo = (newInfo: Partial<IndexInfo>) => info = {...info, ...newInfo};
+        public setInfo = (newInfo: Partial<SpreadInfo>) => info = {...info, ...newInfo};
         public isStore = (key: string) => key.startsWith(params.prefix) && !excludedStoreTags.some(tag => key.endsWith(tag));
         public getSheets = () => Array.from(sheets);
         public writeCols = () => colMap.forEach((cols, sheet) => cols.forEach(col => objMod[sheet][col].setProps()));
