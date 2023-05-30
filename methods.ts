@@ -18,7 +18,7 @@ function doGet(e: { parameter: any; }) {
     else if (Get.url.includes("upwork") || Get.url.includes("djinni")) Resp = FWDBCandidates(Get, 'Free');
     else if (Get.url.includes("apollo")) Resp = FWDBContacts(Get)
     else if (Get.url == "GetUniqueJobs") 
-      Resp = ContentService.createTextOutput((PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string));
+      Resp = ContentService.createTextOutput((new Index(SpreadsheetApp.openById(getFWDBLeads())).getObjMod().LeadsDB.Jobs.getIndex()));
     else if (Get.url == "GetUniqueCands") 
       Resp = ContentService.createTextOutput(PropertiesService.getScriptProperties().getProperty("UniqueCands") as string);
     
@@ -33,9 +33,10 @@ function doPost(e : any) {
   if (JSONString.startsWith("UniqueJobs:")) 
     PropertiesService.getScriptProperties().setProperty("UniqueJobs", JSONString.replace("UniqueJobs:", ""))
   else if (JSONString.startsWith('NewUniqueJobs:')) {
-    PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
-    Utilities.sleep(5000);
-    prepareForSylph('NewUniqueJobs');
+    new Index(SpreadsheetApp.openById(getFWDBLeads())).getObjMod().LeadsDB.Jobs.indexCol().setProps();
+    //PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
+    //Utilities.sleep(5000);
+    //prepareForSylph('NewUniqueJobs');
   }
   else if (JSONString.startsWith('NewUniqueCands:')) {
     PropertiesService.getScriptProperties().setProperty("NewUniqueCands", JSONString.replace('NewUniqueCands:', ''));

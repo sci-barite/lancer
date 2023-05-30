@@ -1,6 +1,6 @@
 type IndexProps = {short: string[], long: [string, string | null][], double?: string[], bad?: [string, string | null][]};
 type ColumnInfo = {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
-type SpreadInfo = {name: string, spreadsheet: string, stores?: number};
+type SpreadInfo = {name: string, spreadsheet: string, postURL: string, stores?: number};
 
 const Index = (() => {
     const [sheetAddress, colAddress, excludedStoreTags] = [1, 2, ['.index', '.info']];
@@ -24,6 +24,7 @@ const Index = (() => {
         }
         public getCache = () => caches.get(this);
         public getProps = () => JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexProps;
+        public getIndex = () => (JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexProps).short.toString();
         public readProp = () => {
             caches.set(this, JSON.parse(params.stores.getProperty(this.#key + '.index')!) as IndexProps);
             return this;
@@ -47,6 +48,7 @@ const Index = (() => {
             if (this.#info.bad) props.bad = index.Unique.filter(tuple => tuple[0].startsWith('BAD'));
             if (this.#info.doubles) props.double = index.Double;
             caches.set(this, props);
+            console.log(`✅ Indexed Column ${this.#info.A1} from "${this.#info.sheetName}": ${index.Unique.length} entries.`);
             return this;
         }
         public deleteId = (type: 'unique' | 'double', id: string) => {
@@ -95,7 +97,7 @@ const Index = (() => {
         private initClass = () => {
             const storedInfo = params.stores.getProperty(params.prefix + '.info');
             if (storedInfo) info = JSON.parse(storedInfo);
-            else info = {name: params.prefix, spreadsheet: params.SS.getId()};
+            else info = {name: params.prefix, spreadsheet: params.SS.getId(), postURL: getFWDBPost()};
             info.stores = keys.length;
             console.log(info);
         }
@@ -150,7 +152,9 @@ function indexTests() {
     const Props = PropertiesService.getScriptProperties();
     const SS = SpreadsheetApp.openById(getFWDBLeads());
     const index = new Index(SS, Props);
+    index.setInfo({postURL: getFWDBPost()});
     const FWDB = index.getObjMod();
+    index.writeInfo();
     console.log('Index Jobs:', FWDB.LeadsDB.Jobs.indexCol().getCache()?.short.length)
     console.log('Main info:', index.getInfo());
     console.log('Jobs info:', FWDB.LeadsDB.Jobs.getInfo());
