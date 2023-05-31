@@ -2,7 +2,7 @@ type IndexProps = {short: string[], long: [string, string | null][], double?: st
 type ColumnInfo = {A1: string, sheetName: string, short?: boolean, doubles?: boolean, bad?: boolean};
 type SpreadInfo = {name: string, spreadsheet: string, postURL: string, stores?: number};
 
-const Index = (() => {
+/* const Index = (() => {
     const [sheetAddress, colAddress, excludedStoreTags] = [1, 2, ['.index', '.info']];
     const objMod : {[sheet: string]: {[column: string]: ColumnIndex}} = {};
     const caches : WeakMap<ColumnIndex, IndexProps> = new WeakMap();
@@ -146,19 +146,4 @@ const Index = (() => {
         }
     }
     return Index;
-})();
-
-function indexTests() {
-    const Props = PropertiesService.getScriptProperties();
-    const SS = SpreadsheetApp.openById(getFWDBLeads());
-    const index = new Index(SS, Props);
-    index.setInfo({postURL: getFWDBPost()});
-    const FWDB = index.getObjMod();
-    index.writeInfo();
-    console.log('Index Jobs:', FWDB.LeadsDB.Jobs.indexCol().getCache()?.short.length)
-    console.log('Main info:', index.getInfo());
-    console.log('Jobs info:', FWDB.LeadsDB.Jobs.getInfo());
-    console.log(FWDB.LeadsDB.Jobs.addElems({short: ['test', 'test2', 'test2']})!);
-    const newIndex = FWDB.LeadsDB.Jobs.getCache()?.short.slice(-10);
-    console.log(newIndex!);
-}
+})(); */
