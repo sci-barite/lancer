@@ -25,6 +25,12 @@ function doGet(e: { parameter: any; }) {
     return Resp;
 }
 
+function testUniqueJobs() {
+  const jobs = PropertiesService.getScriptProperties().getProperty("UniqueJobs") as string;
+  const pars = JSON.parse(jobs);
+  console.log(pars.indexOf("3381376248"))
+}
+
 function doPost(e : any) {
   const JSONString = e.postData.contents;
   const JSONOutput = ContentService.createTextOutput(JSONString.substring(JSONString.length - 5));

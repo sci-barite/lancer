@@ -1,4 +1,4 @@
-import { InternalSymbolName } from "./node_modules/typescript/lib/typescript";
+/* import { InternalSymbolName } from "./node_modules/typescript/lib/typescript";
 
 type ColIndexInfo = {
     fullA1: string,
@@ -124,4 +124,4 @@ function indexTests() {
     console.log(index.getInfo());
     const Jobs = index.getIndex('LeadsDBJobs');
     console.log(Jobs!);
-}
+} */
