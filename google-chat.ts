@@ -9,6 +9,14 @@ function sendMessage(thread?: string, options?: GoogleAppsScript.URL_Fetch.URLFe
     Logger.log(response);
 }
 
+type Rolls = {
+    rolls_grid: {
+        title: string;
+        subtitle?: string | undefined;
+    }[];
+    rolls_results: number[];
+}
+
 function getCardFetchRequestOptions(card_json: {[key: string]: any}) {
     return {
         method : 'post',
@@ -45,11 +53,10 @@ function getRulesSet() {
     return {skills: skills, icons: icons, emojis: emojis, diceTypes: diceTypes};
 }
 
-function createGridCardJson(args: {
+function createGridCardJson(rolls: Rolls, args: {
     card_title: string, 
     card_subtitle: string,
     grid_title: string,
-    grid_elements: {title: string, subtitle?: string}[]
 }) {
     type CardItem = {
         [key: string]: string | number | { type: string } | CardItem | CardItem[];
@@ -80,7 +87,7 @@ function createGridCardJson(args: {
         } as CardItem
       };
 
-    args.grid_elements.forEach(element => {
+    rolls.rolls_grid.forEach(element => {
         grid.items.push({
             image: {
                 imageUri: rules.icons.get(element.title) || snake,
@@ -105,8 +112,7 @@ function createGridCardJson(args: {
             sections: [
                 {widgets: [{grid: grid}]},
                 {widgets: [{
-                    textParagraph: {text: "<b>" + 'TOTAL: ' + 
-                        eval(grid.items.map(item => (item.subtitle as string).split(': ')[1]).toString().replaceAll(',', '+'))}
+                    textParagraph: {text: "<b>" + 'TOTAL: ' + eval(rolls.rolls_results.join('+'))}
                 }]}
             ]
         }
@@ -154,6 +160,9 @@ function createGridCardJson(args: {
         const rolls : {[key: string]: string}[] = [];
         const results : number[] = [];
 
+        type AbilityEmoji = keyof typeof sheet.abilities;
+        type SpiritEmoji = keyof typeof sheet.spirits;
+
         Object.values(foundSkill).forEach(attribute => {
             if (attribute === skill) return;
             rolls.push({title: attribute, subtitle: '1dX Roll: Y'})
@@ -162,7 +171,7 @@ function createGridCardJson(args: {
         rolls.forEach(roll => {
             const emoji = rules.emojis.get(roll.title);
             if (!emoji) throw new Error (`Roll "${roll.title}" doesn't have an associated emoji in rules set!`);
-            const die = sheet.abilities[emoji as keyof typeof sheet.abilities] || sheet.spirits[emoji as keyof typeof sheet.spirits];
+            const die = sheet.abilities[emoji as AbilityEmoji] || sheet.spirits[emoji as SpiritEmoji];
             if (!die) throw new Error(`Unknown die type: ${emoji}`);
             const rolled = Math.ceil(Math.random() * die);
             roll.subtitle = roll.subtitle.replace('X', die.toString()).replace('Y', rolled.toString());
@@ -180,10 +189,9 @@ function createGridCardJson(args: {
     const rolls = getRolls(skill, sheet, rules);
     const skillComponents = rolls.rolls_grid.map(roll => roll.title).join(' + ');
 
-    sendMessage(undefined, getCardFetchRequestOptions(createGridCardJson({
+    sendMessage(undefined, getCardFetchRequestOptions(createGridCardJson(rolls, {
         card_title: skill + ' skill check', 
         card_subtitle: playerName,
-        grid_title: skillComponents,
-        grid_elements: rolls.rolls_grid
+        grid_title: skillComponents
     })));
   }
