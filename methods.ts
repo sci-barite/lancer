@@ -41,7 +41,7 @@ function doPost(e : any) {
   else if (JSONString.startsWith('NewUniqueJobs:')) {
     //new Index(SpreadsheetApp.openById(getFWDBLeads())).getObjMod().LeadsDB.Jobs.indexCol().setProps();
     PropertiesService.getScriptProperties().setProperty("NewUniqueJobs", JSONString.replace('NewUniqueJobs:', ''));
-    Utilities.sleep(5000);
+    Utilities.sleep(2000);
     prepareForSylph('NewUniqueJobs');
   }
   else if (JSONString.startsWith('NewUniqueCands:')) {

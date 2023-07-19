@@ -50,8 +50,8 @@ function restoreTicker() {
 // Since Sylph must only check for doubles and it can infer row from the index, no need to send also Name, Company, and Location for jobs.
 function prepareForSylph(prop: string) {
     const Structured : {[key: string]: any}[] = JSON.parse(PropertiesService.getScriptProperties().getProperty(prop) as string);
-    const IDsOnly = Structured.map(entry => entry['ID']);
+    const IDsOnly = Structured.map(entry => entry[0]);  // Adapted to new indexing! Used to be entry['ID'].
     PropertiesService.getScriptProperties().setProperty(prop.substring(3), JSON.stringify(IDsOnly));
-    Utilities.sleep(5000);
+    Utilities.sleep(2000);
     PropertiesService.getScriptProperties().deleteProperty(prop);
 }
