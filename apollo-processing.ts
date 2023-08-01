@@ -61,8 +61,10 @@ function ContactsList(Contacts: ApolloContact[]) {
             ...get.Default,
             ...Contact,
             Comment: `${ExRow ? '' : get.Default.NewMessage}${Jobs}${ExRow ? '\n'+get.Default.OldMessage : ''}`,
-            Name_id: !Contact.Name_linkedin ? '' : Contact.Name_linkedin.split('/in/')[1].replace('/', ''),
-            Company_id: !Contact.Company_linkedin ? '' : Contact.Company_linkedin.split('/company/')[1].replace('/', ''),
+            Name_id: !Contact.Name_linkedin ? '' : Contact.Name_linkedin.split('/in/')[1] ?? Contact.Name_linkedin.split('/company/')[1],
+            Company_id: (!Contact.Company_linkedin || Contact.Company_linkedin === 'NA')
+                ? (Contact.Name_linkedin.includes('company') ? Contact.Name_linkedin.split('/company/')[1] : '')
+                : Contact.Company_linkedin.split('/company/')[1].replace('/', ''),
             Apollo_link: `${Contact.Name_apollo.startsWith('#') ? get.Default.URL : ''}${Contact.Name_apollo}`
         };
         ExRow ? (RowIndex.push(ExRow), UpdContacts.push(Entry)) : NewContacts.push(Entry);
